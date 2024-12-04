@@ -14,6 +14,7 @@ import android.view.KeyEvent
 import android.view.WindowManager
 import android.content.Intent
 import android.view.accessibility.AccessibilityEvent
+import com.nnnnnnn0090.hardkeypointer.MainActivity.Companion.KEY_MOVE_SPEED
 
 class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
@@ -24,19 +25,9 @@ class TapService : AccessibilityService() {
     private var pointerYPosition = 500
     private var moveSpeed = 10
 
-    private var keyCodes = mutableMapOf(
-        "up" to KeyEvent.KEYCODE_DPAD_UP,
-        "down" to KeyEvent.KEYCODE_DPAD_DOWN,
-        "left" to KeyEvent.KEYCODE_DPAD_LEFT,
-        "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
-        "tap" to KeyEvent.KEYCODE_ENTER,
-        "enable" to KeyEvent.KEYCODE_VOLUME_UP,
-        "disable" to KeyEvent.KEYCODE_VOLUME_DOWN
-    )
-
     private var keyPressStartTime: Long = 0
     private var keyPressEndTime: Long = 0
-    private val longPressThreshold: Long = 500 // milliseconds to detect long press
+    private val longPressThreshold: Long = 500
 
     companion object {
         private const val TAG = "KeyDetectionService"
@@ -47,24 +38,24 @@ class TapService : AccessibilityService() {
         showPointer()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        intent?.let {
-            keyCodes["up"] = it.getIntExtra(MainActivity.KEY_UP_CODE, KeyEvent.KEYCODE_DPAD_UP)
-            keyCodes["down"] = it.getIntExtra(MainActivity.KEY_DOWN_CODE, KeyEvent.KEYCODE_DPAD_DOWN)
-            keyCodes["left"] = it.getIntExtra(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT)
-            keyCodes["right"] = it.getIntExtra(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT)
-            keyCodes["tap"] = it.getIntExtra(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER)
-            keyCodes["enable"] = it.getIntExtra(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP)
-            keyCodes["disable"] = it.getIntExtra(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN)
-
-            moveSpeed = it.getIntExtra(MainActivity.KEY_MOVE_SPEED, 10)
-        }
-        return START_STICKY
+    fun getKeyCodesFromPreferences(): Map<String, Int> {
+        val sharedPreferences = getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", MODE_PRIVATE)
+        moveSpeed = sharedPreferences.getInt(KEY_MOVE_SPEED, 1)
+        return mapOf(
+            "up" to sharedPreferences.getInt(MainActivity.KEY_UP_CODE, KeyEvent.KEYCODE_DPAD_UP),
+            "down" to sharedPreferences.getInt(MainActivity.KEY_DOWN_CODE, KeyEvent.KEYCODE_DPAD_DOWN),
+            "left" to sharedPreferences.getInt(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT),
+            "right" to sharedPreferences.getInt(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT),
+            "tap" to sharedPreferences.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
+            "enable" to sharedPreferences.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
+            "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN)
+        )
     }
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         event?.let {
             Log.d(TAG, "EventKeycode: ${it.keyCode}")
+            val keyCodes = getKeyCodesFromPreferences()
             if (pointerView != null) {
                 when (it.keyCode) {
                     keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
@@ -96,22 +87,24 @@ class TapService : AccessibilityService() {
     }
 
     private fun handleKeyDown(event: KeyEvent) {
+        val keyCodes = getKeyCodesFromPreferences()
         when (event.keyCode) {
-            keyCodes["up"] -> movePointer(0, -10)
-            keyCodes["down"] -> movePointer(0, 10)
-            keyCodes["left"] -> movePointer(-10, 0)
-            keyCodes["right"] -> movePointer(10, 0)
+            keyCodes["up"] -> movePointer(0, -20)
+            keyCodes["down"] -> movePointer(0, 20)
+            keyCodes["left"] -> movePointer(-20, 0)
+            keyCodes["right"] -> movePointer(20, 0)
             keyCodes["tap"] -> {
-                keyPressStartTime = System.currentTimeMillis() // タップ開始時の時間を記録
+                keyPressStartTime = System.currentTimeMillis()
             }
         }
     }
 
     private fun handleKeyUp(event: KeyEvent) {
+        val keyCodes = getKeyCodesFromPreferences()
         if (event.keyCode == keyCodes["tap"]) {
-            keyPressEndTime = System.currentTimeMillis() // キーが離された時間を記録
-            val pressDuration = keyPressEndTime - keyPressStartTime // 実際の押された時間
-            simulatePressAtPointer(pressDuration) // 長押しかタップかを判定して実行
+            keyPressEndTime = System.currentTimeMillis()
+            val pressDuration = keyPressEndTime - keyPressStartTime
+            simulatePressAtPointer(pressDuration)
         }
         if (event.keyCode in keyCodes.values) {
             stopPointerMovement()
