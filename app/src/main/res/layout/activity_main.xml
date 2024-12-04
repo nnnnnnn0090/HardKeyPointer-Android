@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="キー設定"
+        android:textSize="24sp"
+        android:paddingTop="15dp"
+        android:gravity="center" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/scrollView">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="15dp">
+
+            <TextView
+                android:id="@+id/upKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="上移動キーコード"
+                android:textSize="16sp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/upKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/downKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="下移動キーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/downKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/leftKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="左移動キーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/leftKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/rightKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="右移動キーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/rightKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/tapKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="タップキーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/tapKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/moveSpeedLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="移動速度 (ms)"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/moveSpeedEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="速度を入力"
+                android:textSize="16sp"
+                android:layout_marginBottom="10dp" />
+
+            <Button
+                android:id="@+id/license_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="License"
+                android:layout_centerInParent="true" />
+
+            <TextView
+                android:id="@+id/creditTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="© 2024 @nnnnnnn0090"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:layout_marginTop="16dp"
+                android:textColor="#808080"
+                android:paddingBottom="10dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
