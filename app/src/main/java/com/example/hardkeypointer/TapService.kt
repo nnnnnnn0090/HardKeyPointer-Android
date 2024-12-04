@@ -10,10 +10,10 @@ import android.os.Looper
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
-import android.view.WindowManager
 import android.view.KeyEvent
-import android.view.accessibility.AccessibilityEvent
+import android.view.WindowManager
 import android.content.Intent
+import android.view.accessibility.AccessibilityEvent
 
 class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
@@ -33,6 +33,10 @@ class TapService : AccessibilityService() {
         "enable" to KeyEvent.KEYCODE_VOLUME_UP,
         "disable" to KeyEvent.KEYCODE_VOLUME_DOWN
     )
+
+    private var keyPressStartTime: Long = 0
+    private var keyPressEndTime: Long = 0
+    private val longPressThreshold: Long = 500 // milliseconds to detect long press
 
     companion object {
         private const val TAG = "KeyDetectionService"
@@ -97,7 +101,20 @@ class TapService : AccessibilityService() {
             keyCodes["down"] -> movePointer(0, 10)
             keyCodes["left"] -> movePointer(-10, 0)
             keyCodes["right"] -> movePointer(10, 0)
-            keyCodes["tap"] -> simulateTapAtPointer()
+            keyCodes["tap"] -> {
+                keyPressStartTime = System.currentTimeMillis() // タップ開始時の時間を記録
+            }
+        }
+    }
+
+    private fun handleKeyUp(event: KeyEvent) {
+        if (event.keyCode == keyCodes["tap"]) {
+            keyPressEndTime = System.currentTimeMillis() // キーが離された時間を記録
+            val pressDuration = keyPressEndTime - keyPressStartTime // 実際の押された時間
+            simulatePressAtPointer(pressDuration) // 長押しかタップかを判定して実行
+        }
+        if (event.keyCode in keyCodes.values) {
+            stopPointerMovement()
         }
     }
 
@@ -110,20 +127,6 @@ class TapService : AccessibilityService() {
                 handler.postDelayed(this, moveSpeed.toLong())
             }
         })
-    }
-
-    private fun simulateTapAtPointer() {
-        pointerView?.let {
-            val location = IntArray(2)
-            it.getLocationOnScreen(location)
-            simulateTap(location[0].toFloat(), location[1].toFloat())
-        }
-    }
-
-    private fun handleKeyUp(event: KeyEvent) {
-        if (event.keyCode in keyCodes.values) {
-            stopPointerMovement()
-        }
     }
 
     private fun stopPointerMovement() {
@@ -156,20 +159,32 @@ class TapService : AccessibilityService() {
         }
     }
 
-    private fun simulateTap(x: Float, y: Float) {
-        val path = Path().apply { moveTo(x, y) }
-        val strokeDescription = StrokeDescription(path, 0, 100)
-        val gesture = GestureDescription.Builder().addStroke(strokeDescription).build()
+    private fun simulatePressAtPointer(pressDuration: Long) {
+        pointerView?.let {
+            val location = IntArray(2)
+            it.getLocationOnScreen(location)
+            val x = location[0].toFloat()
+            val y = location[1].toFloat()
 
-        dispatchGesture(gesture, object : GestureResultCallback() {
-            override fun onCompleted(gestureDescription: GestureDescription) {
-                Log.d(TAG, "Tap completed")
-            }
+            val path = Path().apply { moveTo(x, y) }
 
-            override fun onCancelled(gestureDescription: GestureDescription) {
-                Log.d(TAG, "Tap cancelled")
-            }
-        }, null)
+            val strokeDescription = StrokeDescription(path, 0, pressDuration)
+            val gesture = GestureDescription.Builder().addStroke(strokeDescription).build()
+
+            dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription) {
+                    if (pressDuration >= longPressThreshold) {
+                        Log.d(TAG, "Long press completed")
+                    } else {
+                        Log.d(TAG, "Tap completed")
+                    }
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription) {
+                    Log.d(TAG, "Press cancelled")
+                }
+            }, null)
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {}
