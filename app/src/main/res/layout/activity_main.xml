@@ -111,6 +111,35 @@
                 android:textSize="16sp"
                 android:layout_marginBottom="10dp" />
 
+            <TextView
+                android:id="@+id/enableKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="有効化キーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/enableKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/disableKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="無効化キーコード"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/disableKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+
             <Button
                 android:id="@+id/license_button"
                 android:layout_width="wrap_content"

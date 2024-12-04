@@ -1,15 +1,12 @@
 package com.nnnnnnn0090.hardkeypointer
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.KeyEvent
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
@@ -20,6 +17,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rightKeyCodeButton: Button
     private lateinit var tapKeyCodeButton: Button
     private lateinit var moveSpeedEditText: EditText
+    private lateinit var enableKeyCodeButton: Button
+    private lateinit var disableKeyCodeButton: Button
 
     private var currentButton: Button? = null
 
@@ -33,16 +32,17 @@ class MainActivity : AppCompatActivity() {
         const val KEY_RIGHT_CODE = "KEY_RIGHT_CODE"
         const val KEY_TAP_CODE = "KEY_TAP_CODE"
         const val KEY_MOVE_SPEED = "KEY_MOVE_SPEED"
+        const val KEY_ENABLE_CODE = "KEY_ENABLE_CODE"
+        const val KEY_DISABLE_CODE = "KEY_DISABLE_CODE"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//
-//        if (!isAccessibilityServiceEnabled()) {
-//            Toast.makeText(this, "アクセシビリティサービスが有効ではありません", Toast.LENGTH_SHORT).show()
-//            return
-//        }
+
+        if (!AccessibilityUtils.isAccessibilityServiceEnabled(this)) {
+            AccessibilityUtils.redirectToAccessibilitySettings(this)
+        }
 
         sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
 
@@ -52,6 +52,8 @@ class MainActivity : AppCompatActivity() {
         rightKeyCodeButton = findViewById(R.id.rightKeyCodeButton)
         tapKeyCodeButton = findViewById(R.id.tapKeyCodeButton)
         moveSpeedEditText = findViewById(R.id.moveSpeedEditText)
+        enableKeyCodeButton = findViewById(R.id.enableKeyCodeButton)
+        disableKeyCodeButton = findViewById(R.id.disableKeyCodeButton)
 
         loadPreferences()
 
@@ -60,6 +62,8 @@ class MainActivity : AppCompatActivity() {
         leftKeyCodeButton.setOnClickListener { startKeyInputMode(leftKeyCodeButton, KEY_LEFT_CODE) }
         rightKeyCodeButton.setOnClickListener { startKeyInputMode(rightKeyCodeButton, KEY_RIGHT_CODE) }
         tapKeyCodeButton.setOnClickListener { startKeyInputMode(tapKeyCodeButton, KEY_TAP_CODE) }
+        enableKeyCodeButton.setOnClickListener { startKeyInputMode(enableKeyCodeButton, KEY_ENABLE_CODE) }
+        disableKeyCodeButton.setOnClickListener { startKeyInputMode(disableKeyCodeButton, KEY_DISABLE_CODE) }
 
         moveSpeedEditText.setOnEditorActionListener { _, _, _ ->
             val speed = moveSpeedEditText.text.toString().toIntOrNull()
@@ -73,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 
         val licenseButton: Button = findViewById(R.id.license_button)
         licenseButton.setOnClickListener {
-            showLicenseDialog()
+            LicenseUtils.showLicenseDialog(this)
         }
     }
 
@@ -85,6 +89,8 @@ class MainActivity : AppCompatActivity() {
         rightKeyCodeButton.text = sharedPreferences.getInt(KEY_RIGHT_CODE, 22).toString()
         tapKeyCodeButton.text = sharedPreferences.getInt(KEY_TAP_CODE, 66).toString()
         moveSpeedEditText.setText(sharedPreferences.getInt(KEY_MOVE_SPEED, 1).toString())
+        enableKeyCodeButton.text = sharedPreferences.getInt(KEY_ENABLE_CODE, 24).toString()
+        disableKeyCodeButton.text = sharedPreferences.getInt(KEY_DISABLE_CODE, 25).toString()
     }
 
     @SuppressLint("SetTextI18n")
@@ -115,45 +121,10 @@ class MainActivity : AppCompatActivity() {
                 KEY_RIGHT_CODE -> putInt(KEY_RIGHT_CODE, keyCode as Int)
                 KEY_TAP_CODE -> putInt(KEY_TAP_CODE, keyCode as Int)
                 KEY_MOVE_SPEED -> putInt(KEY_MOVE_SPEED, keyCode as Int)
+                KEY_ENABLE_CODE -> putInt(KEY_ENABLE_CODE, keyCode as Int)
+                KEY_DISABLE_CODE -> putInt(KEY_DISABLE_CODE, keyCode as Int)
             }
             apply()
         }
     }
-
-    private fun showLicenseDialog() {
-        val licenseText = """
-MIT License
-
-Copyright (c) 2024 nnnnnnn0090
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-        """
-
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("License Information")
-            .setMessage(licenseText)
-            .setPositiveButton("OK", null)
-
-        val dialog = builder.create()
-        dialog.show()
-    }
-//    private fun isAccessibilityServiceEnabled(): Boolean {
-
-//    }
 }
