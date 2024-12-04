@@ -1,6 +1,7 @@
 package com.nnnnnnn0090.hardkeypointer
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.KeyEvent
@@ -42,6 +43,9 @@ class MainActivity : AppCompatActivity() {
 
         if (!AccessibilityUtils.isAccessibilityServiceEnabled(this)) {
             AccessibilityUtils.redirectToAccessibilitySettings(this)
+        } else {
+            val serviceIntent = Intent(this, TapService::class.java)
+            startService(serviceIntent)
         }
 
         sharedPreferences = getSharedPreferences(PREF_NAME, MODE_PRIVATE)
@@ -88,7 +92,7 @@ class MainActivity : AppCompatActivity() {
         leftKeyCodeButton.text = sharedPreferences.getInt(KEY_LEFT_CODE, 21).toString()
         rightKeyCodeButton.text = sharedPreferences.getInt(KEY_RIGHT_CODE, 22).toString()
         tapKeyCodeButton.text = sharedPreferences.getInt(KEY_TAP_CODE, 66).toString()
-        moveSpeedEditText.setText(sharedPreferences.getInt(KEY_MOVE_SPEED, 1).toString())
+        moveSpeedEditText.setText(sharedPreferences.getInt(KEY_MOVE_SPEED, 10).toString())
         enableKeyCodeButton.text = sharedPreferences.getInt(KEY_ENABLE_CODE, 24).toString()
         disableKeyCodeButton.text = sharedPreferences.getInt(KEY_DISABLE_CODE, 25).toString()
     }
