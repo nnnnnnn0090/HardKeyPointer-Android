@@ -30,8 +30,8 @@ class TapService : AccessibilityService() {
         "left" to KeyEvent.KEYCODE_DPAD_LEFT,
         "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
         "tap" to KeyEvent.KEYCODE_ENTER,
-        "enable" to KeyEvent.KEYCODE_VOLUME_UP,  // Example key for enabling the pointer
-        "disable" to KeyEvent.KEYCODE_VOLUME_DOWN  // Example key for disabling the pointer
+        "enable" to KeyEvent.KEYCODE_VOLUME_UP,
+        "disable" to KeyEvent.KEYCODE_VOLUME_DOWN
     )
 
     companion object {
@@ -75,12 +75,12 @@ class TapService : AccessibilityService() {
             when (it.keyCode) {
                 keyCodes["enable"] -> {
                     if (it.action == KeyEvent.ACTION_DOWN) {
-                        showPointer()  // Show the pointer when enable key is pressed
+                        showPointer()
                     }
                 }
                 keyCodes["disable"] -> {
                     if (it.action == KeyEvent.ACTION_DOWN) {
-                        removePointer()  // Hide the pointer when disable key is pressed
+                        removePointer()
                     }
                 }
                 else -> {
