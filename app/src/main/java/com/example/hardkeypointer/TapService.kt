@@ -29,7 +29,9 @@ class TapService : AccessibilityService() {
         "down" to KeyEvent.KEYCODE_DPAD_DOWN,
         "left" to KeyEvent.KEYCODE_DPAD_LEFT,
         "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
-        "tap" to KeyEvent.KEYCODE_ENTER
+        "tap" to KeyEvent.KEYCODE_ENTER,
+        "enable" to KeyEvent.KEYCODE_VOLUME_UP,  // Example key for enabling the pointer
+        "disable" to KeyEvent.KEYCODE_VOLUME_DOWN  // Example key for disabling the pointer
     )
 
     companion object {
@@ -48,6 +50,8 @@ class TapService : AccessibilityService() {
             keyCodes["left"] = it.getIntExtra(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT)
             keyCodes["right"] = it.getIntExtra(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT)
             keyCodes["tap"] = it.getIntExtra(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER)
+            keyCodes["enable"] = it.getIntExtra(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP)
+            keyCodes["disable"] = it.getIntExtra(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN)
 
             moveSpeed = it.getIntExtra(MainActivity.KEY_MOVE_SPEED, 10)
         }
@@ -57,13 +61,27 @@ class TapService : AccessibilityService() {
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         event?.let {
             Log.d(TAG, "EventKeycode: ${it.keyCode}")
-            when (it.keyCode) {
-                keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
-                    when (it.action) {
-                        KeyEvent.ACTION_DOWN -> handleKeyDown(it)
-                        KeyEvent.ACTION_UP -> handleKeyUp(it)
+            if (pointerView != null) {
+                when (it.keyCode) {
+                    keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> handleKeyDown(it)
+                            KeyEvent.ACTION_UP -> handleKeyUp(it)
+                        }
+                        return true
                     }
-                    return true
+                }
+            }
+            when (it.keyCode) {
+                keyCodes["enable"] -> {
+                    if (it.action == KeyEvent.ACTION_DOWN) {
+                        showPointer()  // Show the pointer when enable key is pressed
+                    }
+                }
+                keyCodes["disable"] -> {
+                    if (it.action == KeyEvent.ACTION_DOWN) {
+                        removePointer()  // Hide the pointer when disable key is pressed
+                    }
                 }
                 else -> {
                     return super.onKeyEvent(event)
@@ -72,7 +90,6 @@ class TapService : AccessibilityService() {
         }
         return false
     }
-
 
     private fun handleKeyDown(event: KeyEvent) {
         when (event.keyCode) {
