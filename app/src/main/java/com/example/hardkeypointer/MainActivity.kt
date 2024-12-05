@@ -22,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var disableKeyCodeButton: Button
     private lateinit var scrollupKeyCodeButton: Button
     private lateinit var scrolldownKeyCodeButton: Button
+    private lateinit var scrollrightKeyCodeButton: Button
+    private lateinit var scrollleftKeyCodeButton: Button
 
     private var currentButton: Button? = null
 
@@ -39,6 +41,8 @@ class MainActivity : AppCompatActivity() {
         const val KEY_DISABLE_CODE = "KEY_DISABLE_CODE"
         const val KEY_SCROLLUP_CODE = "KEY_SCROLLUP_CODE"
         const val KEY_SCROLLDOWN_CODE = "KEY_SCROLLDOWN_CODE"
+        const val KEY_SCROLLRIGHT_CODE = "KEY_SCROLLRIGHT_CODE"
+        const val KEY_SCROLLLEFT_CODE = "KEY_SCROLLLEFT_CODE"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,6 +68,8 @@ class MainActivity : AppCompatActivity() {
         disableKeyCodeButton = findViewById(R.id.disableKeyCodeButton)
         scrollupKeyCodeButton = findViewById(R.id.scrollupKeyCodeButton)
         scrolldownKeyCodeButton = findViewById(R.id.scrolldownKeyCodeButton)
+        scrollrightKeyCodeButton = findViewById(R.id.scrollrightKeyCodeButton)
+        scrollleftKeyCodeButton = findViewById(R.id.scrollleftKeyCodeButton)
 
         loadPreferences()
 
@@ -76,6 +82,8 @@ class MainActivity : AppCompatActivity() {
         disableKeyCodeButton.setOnClickListener { startKeyInputMode(disableKeyCodeButton, KEY_DISABLE_CODE) }
         scrollupKeyCodeButton.setOnClickListener { startKeyInputMode(scrollupKeyCodeButton, KEY_SCROLLUP_CODE) }
         scrolldownKeyCodeButton.setOnClickListener { startKeyInputMode(scrolldownKeyCodeButton, KEY_SCROLLDOWN_CODE) }
+        scrollrightKeyCodeButton.setOnClickListener { startKeyInputMode(scrollrightKeyCodeButton, KEY_SCROLLRIGHT_CODE) }
+        scrollleftKeyCodeButton.setOnClickListener { startKeyInputMode(scrollleftKeyCodeButton, KEY_SCROLLLEFT_CODE) }
 
         moveSpeedEditText.setOnEditorActionListener { _, _, _ ->
             val speed = moveSpeedEditText.text.toString().toIntOrNull()
@@ -103,8 +111,10 @@ class MainActivity : AppCompatActivity() {
         moveSpeedEditText.setText(sharedPreferences.getInt(KEY_MOVE_SPEED, 10).toString())
         enableKeyCodeButton.text = sharedPreferences.getInt(KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP).toString()
         disableKeyCodeButton.text = sharedPreferences.getInt(KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN).toString()
-        scrollupKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_1).toString()
-        scrolldownKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_2).toString()
+        scrollupKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2).toString()
+        scrolldownKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5).toString()
+        scrollleftKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLLEFT_CODE, KeyEvent.KEYCODE_4).toString()
+        scrollrightKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLRIGHT_CODE, KeyEvent.KEYCODE_6).toString()
     }
 
     @SuppressLint("SetTextI18n")
@@ -139,6 +149,8 @@ class MainActivity : AppCompatActivity() {
                 KEY_DISABLE_CODE -> putInt(KEY_DISABLE_CODE, keyCode as Int)
                 KEY_SCROLLUP_CODE -> putInt(KEY_SCROLLUP_CODE, keyCode as Int)
                 KEY_SCROLLDOWN_CODE -> putInt(KEY_SCROLLDOWN_CODE, keyCode as Int)
+                KEY_SCROLLLEFT_CODE -> putInt(KEY_SCROLLLEFT_CODE, keyCode as Int)
+                KEY_SCROLLRIGHT_CODE -> putInt(KEY_SCROLLRIGHT_CODE, keyCode as Int)
             }
             apply()
         }
