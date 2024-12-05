@@ -112,6 +112,34 @@
                 android:layout_marginBottom="10dp" />
 
             <TextView
+                android:id="@+id/scrollupKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="上にスクロール"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/scrollupKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
+                android:id="@+id/scrolldownKeyCodeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="下ににスクロール"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/scrolldownKeyCodeButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="設定" />
+
+            <TextView
                 android:id="@+id/enableKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
