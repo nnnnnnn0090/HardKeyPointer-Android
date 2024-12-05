@@ -8,12 +8,12 @@ import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
-import com.nnnnnnn0090.hardkeypointer.MainActivity.Companion.KEY_MOVE_SPEED
+import android.content.res.Configuration
 
 class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
@@ -39,7 +39,7 @@ class TapService : AccessibilityService() {
 
     fun getKeyCodesFromPreferences(): Map<String, Int> {
         val sharedPreferences = getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", MODE_PRIVATE)
-        moveSpeed = sharedPreferences.getInt(KEY_MOVE_SPEED, 1)
+        moveSpeed = sharedPreferences.getInt(MainActivity.KEY_MOVE_SPEED, 1)
         return mapOf(
             "up" to sharedPreferences.getInt(MainActivity.KEY_UP_CODE, KeyEvent.KEYCODE_DPAD_UP),
             "down" to sharedPreferences.getInt(MainActivity.KEY_DOWN_CODE, KeyEvent.KEYCODE_DPAD_DOWN),
@@ -85,18 +85,38 @@ class TapService : AccessibilityService() {
         return false
     }
 
+    private fun getAdjustedDirection(dx: Int, dy: Int): Pair<Int, Int> {
+        val rotation = resources.configuration.orientation
+        return when (rotation) {
+            Configuration.ORIENTATION_LANDSCAPE -> Pair(dy, -dx) // 横画面
+            Configuration.ORIENTATION_PORTRAIT -> Pair(dx, dy) // 縦画面
+            else -> Pair(dx, dy) // 他のケースはそのまま
+        }
+    }
+
     private fun handleKeyDown(event: KeyEvent) {
         val keyCodes = getKeyCodesFromPreferences()
         when (event.keyCode) {
-            keyCodes["up"] -> movePointer(0, -20)
-            keyCodes["down"] -> movePointer(0, 20)
-            keyCodes["left"] -> movePointer(-20, 0)
-            keyCodes["right"] -> movePointer(20, 0)
-            keyCodes["tap"] -> {
-                keyPressStartTime = System.currentTimeMillis()
+            keyCodes["up"] -> {
+                val (dx, dy) = getAdjustedDirection(0, -20)
+                movePointer(dx, dy)
             }
+            keyCodes["down"] -> {
+                val (dx, dy) = getAdjustedDirection(0, 20)
+                movePointer(dx, dy)
+            }
+            keyCodes["left"] -> {
+                val (dx, dy) = getAdjustedDirection(-20, 0)
+                movePointer(dx, dy)
+            }
+            keyCodes["right"] -> {
+                val (dx, dy) = getAdjustedDirection(20, 0)
+                movePointer(dx, dy)
+            }
+            keyCodes["tap"] -> keyPressStartTime = System.currentTimeMillis()
         }
     }
+
 
     private fun handleKeyUp(event: KeyEvent) {
         val keyCodes = getKeyCodesFromPreferences()
