@@ -4,15 +4,19 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        create("release") {
+        }
+    }
     namespace = "com.nnnnnnn0090.hardkeypointer"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.nnnnnnn0090.hardkeypointer"
-        minSdk = 24
+        minSdk = 21
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
