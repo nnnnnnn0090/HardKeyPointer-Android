@@ -19,6 +19,8 @@ class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
     private var pointerView: View? = null
     private val handler = Handler(Looper.getMainLooper())
+    private val scrollHandler = Handler(Looper.getMainLooper())
+    private var scrollRunnable: Runnable? = null
 
     private var pointerXPosition = 500
     private var pointerYPosition = 500
@@ -47,20 +49,84 @@ class TapService : AccessibilityService() {
             "right" to sharedPreferences.getInt(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT),
             "tap" to sharedPreferences.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
             "enable" to sharedPreferences.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
-            "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN)
+            "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN),
+            "scrollup" to sharedPreferences.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_1),
+            "scrolldown" to sharedPreferences.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_2)
         )
     }
+    private fun getPointerCoordinates(): Pair<Float, Float>? {
+        pointerView?.let {
+            val location = IntArray(2)
+            it.getLocationOnScreen(location)
+            val x = location[0].toFloat()
+            val y = location[1].toFloat()
+            return Pair(x, y)
+        }
+        return null
+    }
+
+    private fun simulateScrollUp() {
+        getPointerCoordinates()?.let { (x, y) ->
+            val path = Path().apply {
+                moveTo(x, y)
+                lineTo(x, y - 200f)
+            }
+            executeGesture(path, "Scroll up")
+        }
+    }
+
+    private fun simulateScrollDown() {
+        getPointerCoordinates()?.let { (x, y) ->
+            val path = Path().apply {
+                moveTo(x, y)
+                lineTo(x, y + 200f)
+            }
+            executeGesture(path, "Scroll down")
+        }
+    }
+
+
+    private fun executeGesture(path: Path, gestureName: String) {
+        val strokeDescription = StrokeDescription(path, 0, 300)
+        val gesture = GestureDescription.Builder().addStroke(strokeDescription).build()
+
+        dispatchGesture(gesture, object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription) {
+                Log.d(TAG, "$gestureName completed")
+            }
+
+            override fun onCancelled(gestureDescription: GestureDescription) {
+                Log.d(TAG, "$gestureName cancelled")
+            }
+        }, null)
+    }
+
 
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         event?.let {
-            Log.d(TAG, "EventKeycode: ${it.keyCode}")
             val keyCodes = getKeyCodesFromPreferences()
             if (pointerView != null) {
+                Log.d(TAG, it.keyCode.toString())
+                Log.d(TAG, keyCodes["scrolldown"].toString())
                 when (it.keyCode) {
                     keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> handleKeyDown(it)
                             KeyEvent.ACTION_UP -> handleKeyUp(it)
+                        }
+                        return true
+                    }
+                    keyCodes["scrollup"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScrollUp)
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrolldown"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScrollDown)
+                            KeyEvent.ACTION_UP -> stopScrolling()
                         }
                         return true
                     }
@@ -77,20 +143,35 @@ class TapService : AccessibilityService() {
                         removePointer()
                     }
                 }
-                else -> {
-                    return super.onKeyEvent(event)
-                }
+                else -> return super.onKeyEvent(event)
             }
         }
         return false
     }
 
+    private fun startScrolling(scrollAction: () -> Unit) {
+        scrollRunnable = object : Runnable {
+            override fun run() {
+                scrollAction()
+                scrollHandler.postDelayed(this, 300)
+            }
+        }
+        scrollHandler.post(scrollRunnable!!)
+    }
+
+    private fun stopScrolling() {
+        scrollRunnable?.let {
+            scrollHandler.removeCallbacks(it)
+            scrollRunnable = null
+        }
+    }
+
     private fun getAdjustedDirection(dx: Int, dy: Int): Pair<Int, Int> {
         val rotation = resources.configuration.orientation
         return when (rotation) {
-            Configuration.ORIENTATION_LANDSCAPE -> Pair(dy, -dx) // 横画面
-            Configuration.ORIENTATION_PORTRAIT -> Pair(dx, dy) // 縦画面
-            else -> Pair(dx, dy) // 他のケースはそのまま
+            Configuration.ORIENTATION_LANDSCAPE -> Pair(dy, -dx)
+            Configuration.ORIENTATION_PORTRAIT -> Pair(dx, dy)
+            else -> Pair(dx, dy)
         }
     }
 
@@ -116,7 +197,6 @@ class TapService : AccessibilityService() {
             keyCodes["tap"] -> keyPressStartTime = System.currentTimeMillis()
         }
     }
-
 
     private fun handleKeyUp(event: KeyEvent) {
         val keyCodes = getKeyCodesFromPreferences()
@@ -172,12 +252,7 @@ class TapService : AccessibilityService() {
     }
 
     private fun simulatePressAtPointer(pressDuration: Long) {
-        pointerView?.let {
-            val location = IntArray(2)
-            it.getLocationOnScreen(location)
-            val x = location[0].toFloat()
-            val y = location[1].toFloat()
-
+        getPointerCoordinates()?.let { (x, y) ->
             val path = Path().apply { moveTo(x, y) }
 
             val strokeDescription = StrokeDescription(path, 0, pressDuration)
@@ -198,6 +273,7 @@ class TapService : AccessibilityService() {
             }, null)
         }
     }
+
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {}
 
