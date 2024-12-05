@@ -50,8 +50,10 @@ class TapService : AccessibilityService() {
             "tap" to sharedPreferences.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
             "enable" to sharedPreferences.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
             "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN),
-            "scrollup" to sharedPreferences.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_1),
-            "scrolldown" to sharedPreferences.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_2)
+            "scrollup" to sharedPreferences.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2),
+            "scrolldown" to sharedPreferences.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5),
+            "scrollleft" to sharedPreferences.getInt(MainActivity.KEY_SCROLLLEFT_CODE, KeyEvent.KEYCODE_4),
+            "scrollright" to sharedPreferences.getInt(MainActivity.KEY_SCROLLRIGHT_CODE, KeyEvent.KEYCODE_6)
         )
     }
     private fun getPointerCoordinates(): Pair<Float, Float>? {
@@ -85,6 +87,26 @@ class TapService : AccessibilityService() {
         }
     }
 
+    private fun simulateScrollLeft() {
+        getPointerCoordinates()?.let { (x, y) ->
+            val path = Path().apply {
+                moveTo(x, y)
+                lineTo(x - 200f, y)
+            }
+            executeGesture(path, "Scroll up")
+        }
+    }
+
+    private fun simulateScrollRight() {
+        getPointerCoordinates()?.let { (x, y) ->
+            val path = Path().apply {
+                moveTo(x, y)
+                lineTo(x + 200f, y)
+            }
+            executeGesture(path, "Scroll down")
+        }
+    }
+
 
     private fun executeGesture(path: Path, gestureName: String) {
         val strokeDescription = StrokeDescription(path, 0, 300)
@@ -106,8 +128,6 @@ class TapService : AccessibilityService() {
         event?.let {
             val keyCodes = getKeyCodesFromPreferences()
             if (pointerView != null) {
-                Log.d(TAG, it.keyCode.toString())
-                Log.d(TAG, keyCodes["scrolldown"].toString())
                 when (it.keyCode) {
                     keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
                         when (it.action) {
@@ -126,6 +146,20 @@ class TapService : AccessibilityService() {
                     keyCodes["scrolldown"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> startScrolling(::simulateScrollDown)
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrollleft"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScrollLeft)
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrollright"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScrollRight)
                             KeyEvent.ACTION_UP -> stopScrolling()
                         }
                         return true
