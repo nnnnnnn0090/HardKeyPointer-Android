@@ -2,6 +2,7 @@ package com.nnnnnnn0090.hardkeypointer
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
+import android.accessibilityservice.GestureDescription.StrokeDescription
 import android.graphics.Path
 import android.graphics.PixelFormat
 import android.os.Handler
@@ -13,6 +14,7 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.content.res.Configuration
+import android.widget.Toast
 
 class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
@@ -20,11 +22,14 @@ class TapService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private val scrollHandler = Handler(Looper.getMainLooper())
     private var scrollRunnable: Runnable? = null
-    private var pointerX = 500
-    private var pointerY = 500
+
+    private var pointerXPosition = 500
+    private var pointerYPosition = 500
     private var moveSpeed = 10
-    private var keyPressStart: Long = 0
-    private val longPressThreshold = 500L
+
+    private var keyPressStartTime: Long = 0
+    private var keyPressEndTime: Long = 0
+    private val longPressThreshold: Long = 500
 
     companion object {
         private const val TAG = "KeyDetectionService"
@@ -35,167 +40,275 @@ class TapService : AccessibilityService() {
         showPointer()
     }
 
-    private fun getKeyCodes(): Map<String, Int> {
-        val prefs = getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", MODE_PRIVATE)
-        moveSpeed = prefs.getInt(MainActivity.KEY_MOVE_SPEED, 1)
+    fun getKeyCodesFromPreferences(): Map<String, Int> {
+        val sharedPreferences = getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", MODE_PRIVATE)
+        moveSpeed = sharedPreferences.getInt(MainActivity.KEY_MOVE_SPEED, 1)
         return mapOf(
-            "up" to prefs.getInt(MainActivity.KEY_UP_CODE, KeyEvent.KEYCODE_DPAD_UP),
-            "down" to prefs.getInt(MainActivity.KEY_DOWN_CODE, KeyEvent.KEYCODE_DPAD_DOWN),
-            "left" to prefs.getInt(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT),
-            "right" to prefs.getInt(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT),
-            "tap" to prefs.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
-            "enable" to prefs.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
-            "disable" to prefs.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN),
-            "scrollup" to prefs.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2),
-            "scrolldown" to prefs.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5),
-            "scrollleft" to prefs.getInt(MainActivity.KEY_SCROLLLEFT_CODE, KeyEvent.KEYCODE_4),
-            "scrollright" to prefs.getInt(MainActivity.KEY_SCROLLRIGHT_CODE, KeyEvent.KEYCODE_6)
+            "up" to sharedPreferences.getInt(MainActivity.KEY_UP_CODE, KeyEvent.KEYCODE_DPAD_UP),
+            "down" to sharedPreferences.getInt(MainActivity.KEY_DOWN_CODE, KeyEvent.KEYCODE_DPAD_DOWN),
+            "left" to sharedPreferences.getInt(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT),
+            "right" to sharedPreferences.getInt(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT),
+            "tap" to sharedPreferences.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
+            "enable" to sharedPreferences.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
+            "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN),
+            "scrollup" to sharedPreferences.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2),
+            "scrolldown" to sharedPreferences.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5),
+            "scrollleft" to sharedPreferences.getInt(MainActivity.KEY_SCROLLLEFT_CODE, KeyEvent.KEYCODE_4),
+            "scrollright" to sharedPreferences.getInt(MainActivity.KEY_SCROLLRIGHT_CODE, KeyEvent.KEYCODE_6)
         )
-    }
-
-    private fun handleScroll(action: () -> Unit, start: Boolean) {
-        if (start) {
-            scrollRunnable = Runnable { action(); scrollHandler.postDelayed(scrollRunnable!!, 300) }
-            scrollHandler.post(scrollRunnable!!)
-        } else {
-            scrollRunnable?.let { scrollHandler.removeCallbacks(it) }
-        }
-    }
-
-    private fun handleKey(event: KeyEvent, isDown: Boolean) {
-        val codes = getKeyCodes()
-        if (pointerView == null) return
-        when (event.keyCode) {
-            codes["up"], codes["down"], codes["left"], codes["right"] -> {
-                if (isDown) movePointer(getDirection(event.keyCode, codes))
-                else stopPointerMovement()
-            }
-            codes["tap"] -> if (isDown) keyPressStart = System.currentTimeMillis() else simulatePress()
-            codes["scrollup"], codes["scrolldown"], codes["scrollleft"], codes["scrollright"] -> {
-                val action = when (event.keyCode) {
-                    codes["scrollup"] -> ::scrollUp
-                    codes["scrolldown"] -> ::scrollDown
-                    codes["scrollleft"] -> ::scrollLeft
-                    else -> ::scrollRight
-                }
-                handleScroll(action, isDown)
-            }
-            codes["enable"] -> if (isDown) showPointer()
-            codes["disable"] -> if (isDown) removePointer()
-        }
-    }
-
-    private fun movePointer(delta: Pair<Int, Int>) {
-        handler.post(object : Runnable {
-            override fun run() {
-                pointerX += delta.first
-                pointerY += delta.second
-                updatePointer()
-                handler.postDelayed(this, moveSpeed.toLong())
-            }
-        })
-    }
-
-    private fun stopPointerMovement() = handler.removeCallbacksAndMessages(null)
-
-    private fun simulatePress() {
-        getPointerCoordinates()?.let { (x, y) ->
-            val duration = System.currentTimeMillis() - keyPressStart
-            val path = Path().apply { moveTo(x, y) }
-            dispatchGesture(
-                GestureDescription.Builder().addStroke(
-                    GestureDescription.StrokeDescription(path, 0, duration)
-                ).build(),
-                object : GestureResultCallback() {
-                    override fun onCompleted(gesture: GestureDescription) {
-                        Log.d(TAG, if (duration >= longPressThreshold) "Long press completed" else "Tap completed")
-                    }
-                }, null
-            )
-        }
-    }
-
-    private fun getDirection(keyCode: Int, codes: Map<String, Int>): Pair<Int, Int> {
-        val direction = when (keyCode) {
-            codes["up"] -> 0 to -20
-            codes["down"] -> 0 to 20
-            codes["left"] -> -20 to 0
-            else -> 20 to 0
-        }
-        return if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
-            direction.second to -direction.first else direction
-    }
-
-    private fun showPointer() {
-        if (pointerView == null) {
-            pointerView = LayoutInflater.from(this).inflate(R.layout.pointer_view, null)
-            windowManager.addView(
-                pointerView, WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
-                    PixelFormat.TRANSLUCENT
-                ).apply { x = pointerX; y = pointerY }
-            )
-        }
-    }
-
-    private fun updatePointer() {
-        pointerView?.let {
-            val params = it.layoutParams as WindowManager.LayoutParams
-            params.x = pointerX
-            params.y = pointerY
-            windowManager.updateViewLayout(it, params)
-        }
-    }
-
-    private fun removePointer() {
-        pointerView?.let {
-            windowManager.removeView(it)
-            pointerView = null
-        }
-    }
-
-    private fun scrollUp() = simulateScroll(0, -200)
-    private fun scrollDown() = simulateScroll(0, 200)
-    private fun scrollLeft() = simulateScroll(-200, 0)
-    private fun scrollRight() = simulateScroll(200, 0)
-
-    private fun simulateScroll(dx: Int, dy: Int) {
-        getPointerCoordinates()?.let { (x, y) ->
-            val path = Path().apply {
-                moveTo(x, y)
-                lineTo((x + dx).coerceAtLeast(0f), (y + dy).coerceAtLeast(0f))
-            }
-            dispatchGesture(
-                GestureDescription.Builder().addStroke(
-                    GestureDescription.StrokeDescription(path, 0, 300)
-                ).build(), null, null
-            )
-        }
     }
 
     private fun getPointerCoordinates(): Pair<Float, Float>? {
         pointerView?.let {
             val location = IntArray(2)
             it.getLocationOnScreen(location)
-            return location[0].toFloat() to location[1].toFloat()
+            val x = location[0].toFloat()
+            val y = location[1].toFloat()
+            return Pair(x, y)
         }
         return null
     }
 
-    override fun onKeyEvent(event: KeyEvent?): Boolean {
-        event?.let { handleKey(it, it.action == KeyEvent.ACTION_DOWN) }
-        return true
+
+    private fun simulateScroll(direction: String) {
+        getPointerCoordinates()?.let { (x, y) ->
+            val (dx, dy) = when (direction) {
+                "up" -> getAdjustedDirection(0, -200)
+                "down" -> getAdjustedDirection(0, 200)
+                "left" -> getAdjustedDirection(-200, 0)
+                "right" -> getAdjustedDirection(200, 0)
+                else -> Pair(0, 0)
+            }
+            val startX = x
+            val startY = y
+            val endX = (x + dx).coerceAtLeast(0f)
+            val endY = (y + dy).coerceAtLeast(0f)
+            val path = Path().apply {
+                moveTo(startX, startY)
+                lineTo(endX, endY)
+            }
+            executeGesture(path, "Scroll $direction")
+        }
     }
+
+    private fun startScrolling(scrollAction: (String) -> Unit, direction: String) {
+        scrollRunnable = object : Runnable {
+            override fun run() {
+                scrollAction(direction)
+                scrollHandler.postDelayed(this, 300)
+            }
+        }
+        scrollHandler.post(scrollRunnable!!)
+    }
+
+    private fun stopScrolling() {
+        scrollRunnable?.let {
+            scrollHandler.removeCallbacks(it)
+            scrollRunnable = null
+        }
+    }
+
+    private fun executeGesture(path: Path, gestureName: String) {
+        val strokeDescription = StrokeDescription(path, 0, 300)
+        val gesture = GestureDescription.Builder().addStroke(strokeDescription).build()
+
+        dispatchGesture(gesture, object : GestureResultCallback() {
+            override fun onCompleted(gestureDescription: GestureDescription) {
+                Log.d(TAG, "$gestureName completed")
+            }
+
+            override fun onCancelled(gestureDescription: GestureDescription) {
+                Log.d(TAG, "$gestureName cancelled")
+            }
+        }, null)
+    }
+
+
+    override fun onKeyEvent(event: KeyEvent?): Boolean {
+        event?.let {
+            val keyCodes = getKeyCodesFromPreferences()
+            if (pointerView != null) {
+                when (it.keyCode) {
+                    keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> handleKeyDown(it)
+                            KeyEvent.ACTION_UP -> handleKeyUp(it)
+                        }
+                        return true
+                    }
+                    keyCodes["scrollup"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "up")
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrolldown"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "down")
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrollleft"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "left")
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                    keyCodes["scrollright"] -> {
+                        when (it.action) {
+                            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "right")
+                            KeyEvent.ACTION_UP -> stopScrolling()
+                        }
+                        return true
+                    }
+                }
+            }
+            when (it.keyCode) {
+                keyCodes["enable"] -> {
+                    if (it.action == KeyEvent.ACTION_DOWN) {
+                        showPointer()
+                    }
+                }
+                keyCodes["disable"] -> {
+                    if (it.action == KeyEvent.ACTION_DOWN) {
+                        removePointer()
+                    }
+                }
+                else -> return super.onKeyEvent(event)
+            }
+        }
+        return false
+    }
+
+    private fun getAdjustedDirection(dx: Int, dy: Int): Pair<Int, Int> {
+        val rotation = resources.configuration.orientation
+        return when (rotation) {
+            Configuration.ORIENTATION_LANDSCAPE -> Pair(dy, -dx)
+            Configuration.ORIENTATION_PORTRAIT -> Pair(dx, dy)
+            else -> Pair(dx, dy)
+        }
+    }
+
+    private fun handleKeyDown(event: KeyEvent) {
+        val keyCodes = getKeyCodesFromPreferences()
+        when (event.keyCode) {
+            keyCodes["up"] -> {
+                val (dx, dy) = getAdjustedDirection(0, -20)
+                movePointer(dx, dy)
+            }
+            keyCodes["down"] -> {
+                val (dx, dy) = getAdjustedDirection(0, 20)
+                movePointer(dx, dy)
+            }
+            keyCodes["left"] -> {
+                val (dx, dy) = getAdjustedDirection(-20, 0)
+                movePointer(dx, dy)
+            }
+            keyCodes["right"] -> {
+                val (dx, dy) = getAdjustedDirection(20, 0)
+                movePointer(dx, dy)
+            }
+            keyCodes["tap"] -> keyPressStartTime = System.currentTimeMillis()
+        }
+    }
+
+    private fun handleKeyUp(event: KeyEvent) {
+        val keyCodes = getKeyCodesFromPreferences()
+        if (event.keyCode == keyCodes["tap"]) {
+            keyPressEndTime = System.currentTimeMillis()
+            val pressDuration = keyPressEndTime - keyPressStartTime
+            simulatePressAtPointer(pressDuration)
+        }
+        if (event.keyCode in keyCodes.values) {
+            stopPointerMovement()
+        }
+    }
+
+    private fun movePointer(dx: Int, dy: Int) {
+        handler.post(object : Runnable {
+            override fun run() {
+                pointerXPosition += dx
+                pointerYPosition += dy
+                updatePointerPosition()
+                handler.postDelayed(this, moveSpeed.toLong())
+            }
+        })
+    }
+
+    private fun stopPointerMovement() {
+        handler.removeCallbacksAndMessages(null)
+    }
+
+    private fun showPointer() {
+        if (pointerView == null) {
+            pointerView = LayoutInflater.from(this).inflate(R.layout.pointer_view, null)
+            val params = WindowManager.LayoutParams(
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.WRAP_CONTENT,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                PixelFormat.TRANSLUCENT
+            ).apply {
+                x = pointerXPosition
+                y = pointerYPosition
+            }
+            windowManager.addView(pointerView, params)
+            Toast.makeText(this, getString(R.string.pointer_shown), Toast.LENGTH_SHORT).show()        }
+    }
+
+    private fun updatePointerPosition() {
+        pointerView?.let {
+            val params = it.layoutParams as WindowManager.LayoutParams
+            params.x = pointerXPosition
+            params.y = pointerYPosition
+            windowManager.updateViewLayout(it, params)
+        }
+    }
+
+    private fun simulatePressAtPointer(pressDuration: Long) {
+        getPointerCoordinates()?.let { (x, y) ->
+            val path = Path().apply { moveTo(x, y) }
+
+            val strokeDescription = StrokeDescription(path, 0, pressDuration)
+            val gesture = GestureDescription.Builder().addStroke(strokeDescription).build()
+
+            dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription) {
+                    if (pressDuration >= longPressThreshold) {
+                        Log.d(TAG, "Long press completed")
+                    } else {
+                        Log.d(TAG, "Tap completed")
+                    }
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription) {
+                    Log.d(TAG, "Press cancelled")
+                }
+            }, null)
+        }
+    }
+
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {}
 
-    override fun onInterrupt() = removePointer()
+    override fun onInterrupt() {
+        removePointer()
+    }
 
     override fun onDestroy() {
         super.onDestroy()
         removePointer()
     }
+
+    private fun removePointer() {
+        pointerView?.let {
+            windowManager.removeView(it)
+            pointerView = null
+            Toast.makeText(this, getString(R.string.pointer_removed), Toast.LENGTH_SHORT).show()
+        }
+    }
+
 }

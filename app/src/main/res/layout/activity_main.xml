@@ -3,17 +3,21 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp">
 
+    <!-- Title Text -->
     <TextView
         android:id="@+id/titleTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="キー設定"
+        android:text="@string/key_settings"
         android:textSize="24sp"
-        android:paddingTop="15dp"
+        android:paddingTop="13dp"
+        android:paddingBottom="13dp"
         android:gravity="center" />
 
+    <!-- ScrollView containing the key settings -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -22,27 +26,28 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingTop="15dp">
+            android:orientation="vertical">
 
+            <!-- Up Movement Key Code -->
             <TextView
                 android:id="@+id/upKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="上移動キーコード"
+                android:text="@string/up_move_key_code"
                 android:textSize="16sp"
                 android:layout_marginBottom="8dp" />
             <Button
                 android:id="@+id/upKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Down Movement Key Code -->
             <TextView
                 android:id="@+id/downKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="下移動キーコード"
+                android:text="@string/down_move_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -50,13 +55,14 @@
                 android:id="@+id/downKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Left Movement Key Code -->
             <TextView
                 android:id="@+id/leftKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="左移動キーコード"
+                android:text="@string/left_move_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -64,13 +70,14 @@
                 android:id="@+id/leftKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Right Movement Key Code -->
             <TextView
                 android:id="@+id/rightKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="右移動キーコード"
+                android:text="@string/right_move_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -78,13 +85,14 @@
                 android:id="@+id/rightKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Tap Key Code -->
             <TextView
                 android:id="@+id/tapKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="タップキーコード"
+                android:text="@string/tap_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -92,13 +100,14 @@
                 android:id="@+id/tapKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Move Speed -->
             <TextView
                 android:id="@+id/moveSpeedLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="移動速度 (ms)"
+                android:text="@string/move_speed"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -107,15 +116,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="number"
-                android:hint="速度を入力"
+                android:hint="@string/enter_speed_hint"
                 android:textSize="16sp"
                 android:layout_marginBottom="10dp" />
 
+            <!-- Scroll Up -->
             <TextView
                 android:id="@+id/scrollupKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="上にスクロール"
+                android:text="@string/scroll_up"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -123,13 +133,14 @@
                 android:id="@+id/scrollupKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Scroll Down -->
             <TextView
                 android:id="@+id/scrolldownKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="下ににスクロール"
+                android:text="@string/scroll_down"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -137,13 +148,14 @@
                 android:id="@+id/scrolldownKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Scroll Left -->
             <TextView
                 android:id="@+id/scrollleftKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="左ににスクロール"
+                android:text="@string/scroll_left"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -151,13 +163,14 @@
                 android:id="@+id/scrollleftKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Scroll Right -->
             <TextView
                 android:id="@+id/scrollrightKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="右にスクロール"
+                android:text="@string/scroll_right"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -165,13 +178,14 @@
                 android:id="@+id/scrollrightKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Enable Key Code -->
             <TextView
                 android:id="@+id/enableKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="有効化キーコード"
+                android:text="@string/enable_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -179,13 +193,14 @@
                 android:id="@+id/enableKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
+            <!-- Disable Key Code -->
             <TextView
                 android:id="@+id/disableKeyCodeLabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="無効化キーコード"
+                android:text="@string/disable_key_code"
                 android:textSize="16sp"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="8dp" />
@@ -193,21 +208,23 @@
                 android:id="@+id/disableKeyCodeButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="設定" />
+                android:text="@string/set_button" />
 
-
+            <!-- License Button -->
             <Button
                 android:id="@+id/license_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="License"
+                android:text="@string/license_button"
+                android:layout_marginTop="16dp"
                 android:layout_centerInParent="true" />
 
+            <!-- Credit Text -->
             <TextView
                 android:id="@+id/creditTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="© 2024 @nnnnnnn0090"
+                android:text="@string/credit"
                 android:textSize="12sp"
                 android:gravity="center"
                 android:layout_marginTop="16dp"

@@ -1,4 +1,28 @@
 <resources>
     <string name="app_name">HardKeyPointer</string>
-    <string name="accessibility_service_description">HardKeyPointer - © 2024 @nnnnnnn0090.</string>
+    <string name="accessibility_service_description">HardKeyPointer - © 2024 @nnnnnnn0090</string>
+
+    <string name="key_settings">Key Settings</string>
+    <string name="up_move_key_code">Up Movement Key Code</string>
+    <string name="down_move_key_code">Down Movement Key Code</string>
+    <string name="left_move_key_code">Left Movement Key Code</string>
+    <string name="right_move_key_code">Right Movement Key Code</string>
+    <string name="tap_key_code">Tap Key Code</string>
+    <string name="move_speed">Movement Speed (ms)</string>
+    <string name="scroll_up">Scroll Up</string>
+    <string name="scroll_down">Scroll Down</string>
+    <string name="scroll_left">Scroll Left</string>
+    <string name="scroll_right">Scroll Right</string>
+    <string name="enable_key_code">Enable Key Code</string>
+    <string name="disable_key_code">Disable Key Code</string>
+    <string name="set_button">Set</string>
+    <string name="license_button">License</string>
+    <string name="credit">© 2024 @nnnnnnn0090</string>
+    <string name="enter_speed_hint">Pointer Speed</string>
+    <string name="move_speed_saved">Movement speed saved</string>
+    <string name="not_set">Not set: 0</string>
+    <string name="waiting_for_key_input">Waiting for key input...</string>
+    <string name="key_code_set">Setting applied: %1$d</string>
+    <string name="pointer_removed">Pointer hidden</string>
+    <string name="pointer_shown">Pointer displayed</string>
 </resources>
