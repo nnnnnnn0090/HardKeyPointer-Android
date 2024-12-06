@@ -6,10 +6,9 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 
 ## 特徴
 
-- ハードキーでポインタ操作
+- ハードキーでポインタ操作 (tap & scroll)
 - キー割り当てを変更可
-- 再起動後も自動で起動
-- 簡単にセットアップでき、すぐに使用可能
+- 再起動後も自動起動
 
 ## To-Do
 - ~~ハードキーでのスクロールをサポート予定~~
