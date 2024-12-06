@@ -85,19 +85,39 @@ class MainActivity : AppCompatActivity() {
         scrollrightKeyCodeButton.setOnClickListener { startKeyInputMode(scrollrightKeyCodeButton, KEY_SCROLLRIGHT_CODE) }
         scrollleftKeyCodeButton.setOnClickListener { startKeyInputMode(scrollleftKeyCodeButton, KEY_SCROLLLEFT_CODE) }
 
+        setLongPressListener(upKeyCodeButton, KEY_UP_CODE)
+        setLongPressListener(downKeyCodeButton, KEY_DOWN_CODE)
+        setLongPressListener(leftKeyCodeButton, KEY_LEFT_CODE)
+        setLongPressListener(rightKeyCodeButton, KEY_RIGHT_CODE)
+        setLongPressListener(tapKeyCodeButton, KEY_TAP_CODE)
+        setLongPressListener(enableKeyCodeButton, KEY_ENABLE_CODE)
+        setLongPressListener(disableKeyCodeButton, KEY_DISABLE_CODE)
+        setLongPressListener(scrollupKeyCodeButton, KEY_SCROLLUP_CODE)
+        setLongPressListener(scrolldownKeyCodeButton, KEY_SCROLLDOWN_CODE)
+        setLongPressListener(scrollrightKeyCodeButton, KEY_SCROLLRIGHT_CODE)
+        setLongPressListener(scrollleftKeyCodeButton, KEY_SCROLLLEFT_CODE)
+
         moveSpeedEditText.setOnEditorActionListener { _, _, _ ->
             val speed = moveSpeedEditText.text.toString().toIntOrNull()
             if (speed != null) {
                 moveSpeedEditText.clearFocus()
                 saveKeyCodeToPreferences(KEY_MOVE_SPEED, speed)
-                Toast.makeText(this@MainActivity, "移動速度を保存しました", Toast.LENGTH_SHORT).show()
-            }
+                Toast.makeText(this@MainActivity, getString(R.string.move_speed_saved), Toast.LENGTH_SHORT).show()            }
             true
         }
 
         val licenseButton: Button = findViewById(R.id.license_button)
         licenseButton.setOnClickListener {
             LicenseUtils.showLicenseDialog(this)
+        }
+    }
+
+    private fun setLongPressListener(button: Button, key: String) {
+        button.setOnLongClickListener {
+            button.text = "0"
+            saveKeyCodeToPreferences(key, 3000)
+            Toast.makeText(this, getString(R.string.not_set), Toast.LENGTH_SHORT).show()
+            true
         }
     }
 
@@ -120,12 +140,12 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("SetTextI18n")
     private fun startKeyInputMode(button: Button, key: String) {
         currentButton = button
-        button.text = "キーを入力待機中..."
+        button.text = getString(R.string.waiting_for_key_input)
 
         button.setOnKeyListener { _, keyCode, event ->
             if (event.action == KeyEvent.ACTION_DOWN) {
                 button.text = keyCode.toString()
-                Toast.makeText(this, "設定しました: $keyCode", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.key_code_set, keyCode), Toast.LENGTH_SHORT).show()
                 saveKeyCodeToPreferences(key, keyCode)
                 currentButton = null
                 button.setOnKeyListener(null)
