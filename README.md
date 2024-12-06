@@ -15,11 +15,10 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 - ハードキーでのスクロールをサポート予定
 - ~~画面回転対応~~
 
+テスト済み：Mode 1 Retro II
+https://github.com/user-attachments/assets/7f7c3ae0-505c-4d51-8a30-98ceab76c4f1
 
-https://github.com/user-attachments/assets/321d0985-30f8-4103-b788-a0ca889f6fa1
-
-
-組み込み（プリインストール）もOKです
+組み込み（プリインストール）OKです
 
 #Hardware Keyboard 
 #Hardware Button 
