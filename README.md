@@ -16,6 +16,7 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 - スクロール速度の追加
 
 テスト済み：Mode 1 Retro II
+
 https://github.com/user-attachments/assets/7f7c3ae0-505c-4d51-8a30-98ceab76c4f1
 
 組み込み（プリインストール）OKです
