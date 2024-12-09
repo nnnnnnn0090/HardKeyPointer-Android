@@ -21,10 +21,10 @@ class TapService : AccessibilityService() {
     private var pointerView: View? = null
     private val handler = Handler(Looper.getMainLooper())
     private val scrollHandler = Handler(Looper.getMainLooper())
-    private var scrollRunnable: Runnable? = null
+    private val scrollRunnables = mutableMapOf<String, Runnable?>()
 
-    private var pointerXPosition = 500
-    private var pointerYPosition = 500
+    private var pointerXPosition = 100
+    private var pointerYPosition = 100
     private var moveSpeed = 10
 
     private var keyPressStartTime: Long = 0
@@ -68,7 +68,6 @@ class TapService : AccessibilityService() {
         return null
     }
 
-
     private fun simulateScroll(direction: String) {
         getPointerCoordinates()?.let { (x, y) ->
             val (dx, dy) = when (direction) {
@@ -91,19 +90,22 @@ class TapService : AccessibilityService() {
     }
 
     private fun startScrolling(scrollAction: (String) -> Unit, direction: String) {
-        scrollRunnable = object : Runnable {
+        if (scrollRunnables[direction] != null) return
+
+        val newRunnable = object : Runnable {
             override fun run() {
                 scrollAction(direction)
                 scrollHandler.postDelayed(this, 300)
             }
         }
-        scrollHandler.post(scrollRunnable!!)
+        scrollRunnables[direction] = newRunnable
+        scrollHandler.post(newRunnable)
     }
 
-    private fun stopScrolling() {
-        scrollRunnable?.let {
+    private fun stopScrolling(direction: String) {
+        scrollRunnables[direction]?.let {
             scrollHandler.removeCallbacks(it)
-            scrollRunnable = null
+            scrollRunnables[direction] = null
         }
     }
 
@@ -122,7 +124,6 @@ class TapService : AccessibilityService() {
         }, null)
     }
 
-
     override fun onKeyEvent(event: KeyEvent?): Boolean {
         event?.let {
             val keyCodes = getKeyCodesFromPreferences()
@@ -138,28 +139,28 @@ class TapService : AccessibilityService() {
                     keyCodes["scrollup"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "up")
-                            KeyEvent.ACTION_UP -> stopScrolling()
+                            KeyEvent.ACTION_UP -> stopScrolling("up")
                         }
                         return true
                     }
                     keyCodes["scrolldown"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "down")
-                            KeyEvent.ACTION_UP -> stopScrolling()
+                            KeyEvent.ACTION_UP -> stopScrolling("down")
                         }
                         return true
                     }
                     keyCodes["scrollleft"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "left")
-                            KeyEvent.ACTION_UP -> stopScrolling()
+                            KeyEvent.ACTION_UP -> stopScrolling("left")
                         }
                         return true
                     }
                     keyCodes["scrollright"] -> {
                         when (it.action) {
                             KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, "right")
-                            KeyEvent.ACTION_UP -> stopScrolling()
+                            KeyEvent.ACTION_UP -> stopScrolling("right")
                         }
                         return true
                     }
@@ -288,7 +289,6 @@ class TapService : AccessibilityService() {
             }, null)
         }
     }
-
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {}
 
