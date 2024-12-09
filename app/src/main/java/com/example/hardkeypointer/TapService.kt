@@ -49,7 +49,6 @@ class TapService : AccessibilityService() {
             "left" to sharedPreferences.getInt(MainActivity.KEY_LEFT_CODE, KeyEvent.KEYCODE_DPAD_LEFT),
             "right" to sharedPreferences.getInt(MainActivity.KEY_RIGHT_CODE, KeyEvent.KEYCODE_DPAD_RIGHT),
             "tap" to sharedPreferences.getInt(MainActivity.KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER),
-            "enable" to sharedPreferences.getInt(MainActivity.KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP),
             "disable" to sharedPreferences.getInt(MainActivity.KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN),
             "scrollup" to sharedPreferences.getInt(MainActivity.KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2),
             "scrolldown" to sharedPreferences.getInt(MainActivity.KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5),
@@ -167,14 +166,13 @@ class TapService : AccessibilityService() {
                 }
             }
             when (it.keyCode) {
-                keyCodes["enable"] -> {
-                    if (it.action == KeyEvent.ACTION_DOWN) {
-                        showPointer()
-                    }
-                }
                 keyCodes["disable"] -> {
                     if (it.action == KeyEvent.ACTION_DOWN) {
-                        removePointer()
+                        if (pointerView == null) {
+                            showPointer()
+                        }else{
+                            removePointer()
+                        }
                     }
                 }
                 else -> return super.onKeyEvent(event)

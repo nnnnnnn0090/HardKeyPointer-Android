@@ -13,8 +13,7 @@
     <string name="scroll_down">Scroll Down</string>
     <string name="scroll_left">Scroll Left</string>
     <string name="scroll_right">Scroll Right</string>
-    <string name="enable_key_code">Enable Key Code</string>
-    <string name="disable_key_code">Disable Key Code</string>
+    <string name="disable_key_code">Enable/Disable Key Code</string>
     <string name="set_button">Set</string>
     <string name="license_button">License</string>
     <string name="credit">© 2024 @nnnnnnn0090</string>

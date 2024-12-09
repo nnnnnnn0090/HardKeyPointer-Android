@@ -18,7 +18,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var rightKeyCodeButton: Button
     private lateinit var tapKeyCodeButton: Button
     private lateinit var moveSpeedEditText: EditText
-    private lateinit var enableKeyCodeButton: Button
     private lateinit var disableKeyCodeButton: Button
     private lateinit var scrollupKeyCodeButton: Button
     private lateinit var scrolldownKeyCodeButton: Button
@@ -37,7 +36,6 @@ class MainActivity : AppCompatActivity() {
         const val KEY_RIGHT_CODE = "KEY_RIGHT_CODE"
         const val KEY_TAP_CODE = "KEY_TAP_CODE"
         const val KEY_MOVE_SPEED = "KEY_MOVE_SPEED"
-        const val KEY_ENABLE_CODE = "KEY_ENABLE_CODE"
         const val KEY_DISABLE_CODE = "KEY_DISABLE_CODE"
         const val KEY_SCROLLUP_CODE = "KEY_SCROLLUP_CODE"
         const val KEY_SCROLLDOWN_CODE = "KEY_SCROLLDOWN_CODE"
@@ -64,7 +62,6 @@ class MainActivity : AppCompatActivity() {
         rightKeyCodeButton = findViewById(R.id.rightKeyCodeButton)
         tapKeyCodeButton = findViewById(R.id.tapKeyCodeButton)
         moveSpeedEditText = findViewById(R.id.moveSpeedEditText)
-        enableKeyCodeButton = findViewById(R.id.enableKeyCodeButton)
         disableKeyCodeButton = findViewById(R.id.disableKeyCodeButton)
         scrollupKeyCodeButton = findViewById(R.id.scrollupKeyCodeButton)
         scrolldownKeyCodeButton = findViewById(R.id.scrolldownKeyCodeButton)
@@ -78,7 +75,6 @@ class MainActivity : AppCompatActivity() {
         leftKeyCodeButton.setOnClickListener { startKeyInputMode(leftKeyCodeButton, KEY_LEFT_CODE) }
         rightKeyCodeButton.setOnClickListener { startKeyInputMode(rightKeyCodeButton, KEY_RIGHT_CODE) }
         tapKeyCodeButton.setOnClickListener { startKeyInputMode(tapKeyCodeButton, KEY_TAP_CODE) }
-        enableKeyCodeButton.setOnClickListener { startKeyInputMode(enableKeyCodeButton, KEY_ENABLE_CODE) }
         disableKeyCodeButton.setOnClickListener { startKeyInputMode(disableKeyCodeButton, KEY_DISABLE_CODE) }
         scrollupKeyCodeButton.setOnClickListener { startKeyInputMode(scrollupKeyCodeButton, KEY_SCROLLUP_CODE) }
         scrolldownKeyCodeButton.setOnClickListener { startKeyInputMode(scrolldownKeyCodeButton, KEY_SCROLLDOWN_CODE) }
@@ -90,7 +86,6 @@ class MainActivity : AppCompatActivity() {
         setLongPressListener(leftKeyCodeButton, KEY_LEFT_CODE)
         setLongPressListener(rightKeyCodeButton, KEY_RIGHT_CODE)
         setLongPressListener(tapKeyCodeButton, KEY_TAP_CODE)
-        setLongPressListener(enableKeyCodeButton, KEY_ENABLE_CODE)
         setLongPressListener(disableKeyCodeButton, KEY_DISABLE_CODE)
         setLongPressListener(scrollupKeyCodeButton, KEY_SCROLLUP_CODE)
         setLongPressListener(scrolldownKeyCodeButton, KEY_SCROLLDOWN_CODE)
@@ -129,7 +124,6 @@ class MainActivity : AppCompatActivity() {
         rightKeyCodeButton.text = sharedPreferences.getInt(KEY_RIGHT_CODE,  KeyEvent.KEYCODE_DPAD_RIGHT).toString()
         tapKeyCodeButton.text = sharedPreferences.getInt(KEY_TAP_CODE, KeyEvent.KEYCODE_ENTER).toString()
         moveSpeedEditText.setText(sharedPreferences.getInt(KEY_MOVE_SPEED, 10).toString())
-        enableKeyCodeButton.text = sharedPreferences.getInt(KEY_ENABLE_CODE, KeyEvent.KEYCODE_VOLUME_UP).toString()
         disableKeyCodeButton.text = sharedPreferences.getInt(KEY_DISABLE_CODE, KeyEvent.KEYCODE_VOLUME_DOWN).toString()
         scrollupKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLUP_CODE, KeyEvent.KEYCODE_2).toString()
         scrolldownKeyCodeButton.text = sharedPreferences.getInt(KEY_SCROLLDOWN_CODE, KeyEvent.KEYCODE_5).toString()
@@ -165,7 +159,6 @@ class MainActivity : AppCompatActivity() {
                 KEY_RIGHT_CODE -> putInt(KEY_RIGHT_CODE, keyCode as Int)
                 KEY_TAP_CODE -> putInt(KEY_TAP_CODE, keyCode as Int)
                 KEY_MOVE_SPEED -> putInt(KEY_MOVE_SPEED, keyCode as Int)
-                KEY_ENABLE_CODE -> putInt(KEY_ENABLE_CODE, keyCode as Int)
                 KEY_DISABLE_CODE -> putInt(KEY_DISABLE_CODE, keyCode as Int)
                 KEY_SCROLLUP_CODE -> putInt(KEY_SCROLLUP_CODE, keyCode as Int)
                 KEY_SCROLLDOWN_CODE -> putInt(KEY_SCROLLDOWN_CODE, keyCode as Int)

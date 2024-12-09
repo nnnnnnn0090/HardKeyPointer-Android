@@ -13,8 +13,7 @@
     <string name="scroll_down">下にスクロール</string>
     <string name="scroll_left">左にスクロール</string>
     <string name="scroll_right">右にスクロール</string>
-    <string name="enable_key_code">有効化キーコード</string>
-    <string name="disable_key_code">無効化キーコード</string>
+    <string name="disable_key_code">有効化/無効化キーコード</string>
     <string name="set_button">設定</string>
     <string name="license_button">ライセンス</string>
     <string name="credit">© 2024 @nnnnnnn0090</string>
