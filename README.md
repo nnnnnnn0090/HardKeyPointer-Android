@@ -19,6 +19,10 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 
 組み込み（プリインストール）OKです
 
+
+https://github.com/user-attachments/assets/4d60c6fc-2446-4d48-9427-d80d26312bea
+
+
 #Hardware Keyboard 
 #Hardware Button 
 #Pointer
