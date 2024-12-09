@@ -180,21 +180,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/set_button" />
 
-            <!-- Enable Key Code -->
-            <TextView
-                android:id="@+id/enableKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/enable_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/enableKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
-
             <!-- Disable Key Code -->
             <TextView
                 android:id="@+id/disableKeyCodeLabel"
