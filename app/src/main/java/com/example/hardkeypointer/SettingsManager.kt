@@ -42,5 +42,5 @@ object SettingsManager {
     fun setMoveAccel(context: Context, accel: Int) = getPrefs(context).edit().putInt("moveAccel", accel).apply()
     
     fun getAllKeyCodes(context: Context): Map<String, Int> =
-        defaultKeys.mapValues { (action, default) -> getKeyCode(context, action) }
+        defaultKeys.mapValues { (action, _) -> getKeyCode(context, action) }
 }

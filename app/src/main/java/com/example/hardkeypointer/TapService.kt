@@ -87,7 +87,13 @@ class TapService : AccessibilityService() {
                 return
             }
             
-            val rotation = windowManager.defaultDisplay.rotation
+            val display = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                display
+            } else {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay
+            }
+            val rotation = display?.rotation ?: Surface.ROTATION_0
             val rotatedDirection = getRotatedDirection(direction, rotation)
             val (dx, dy) = when (rotatedDirection) {
                 "up" -> Pair(0, -200)
@@ -180,7 +186,13 @@ class TapService : AccessibilityService() {
         }
 
         if (direction != null) {
-            val rotation = windowManager.defaultDisplay.rotation
+            val display = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                display
+            } else {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay
+            }
+            val rotation = display?.rotation ?: Surface.ROTATION_0
             val rotatedDirection = getRotatedDirection(direction, rotation)
             when (rotatedDirection) {
                 "up" -> movePointer(0, -1)
