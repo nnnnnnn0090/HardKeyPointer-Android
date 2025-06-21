@@ -13,6 +13,7 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 ## To-Do
 - ~~ハードキーでのスクロールをサポート予定~~
 - ~~画面回転対応~~
+- ~~ポインタ加速度~~
 - スクロール速度の追加
 - ピンチイン/アウト
 

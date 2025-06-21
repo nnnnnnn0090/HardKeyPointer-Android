@@ -120,6 +120,24 @@
                 android:textSize="16sp"
                 android:layout_marginBottom="10dp" />
 
+            <!-- Move Acceleration -->
+            <TextView
+                android:id="@+id/moveAccelLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/move_accel"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/moveAccelEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="@string/enter_accel_hint"
+                android:textSize="16sp"
+                android:layout_marginBottom="10dp" />
+
             <!-- Scroll Up -->
             <TextView
                 android:id="@+id/scrollupKeyCodeLabel"
