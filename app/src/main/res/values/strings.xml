@@ -26,4 +26,5 @@
     <string name="pointer_shown">Pointer shown</string>
     <string name="move_accel">Acceleration</string>
     <string name="enter_accel_hint">Acceleration rate</string>
+    <string name="move_accel_saved">Acceleration saved</string>
 </resources>

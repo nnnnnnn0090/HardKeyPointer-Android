@@ -18,7 +18,7 @@
     <string name="license_button">ライセンス</string>
     <string name="credit">© 2024 @nnnnnnn0090</string>
     <string name="enter_speed_hint">移動速度</string>
-    <string name="move_speed_saved">速度を保存</string>
+    <string name="move_speed_saved">速度を保存しました</string>
     <string name="not_set">無効</string>
     <string name="waiting_for_key_input">キー入力待ち...</string>
     <string name="key_code_set">キー設定: %1$d</string>
@@ -26,4 +26,5 @@
     <string name="pointer_removed">ポインタ非表示</string>
     <string name="move_accel">加速度</string>
     <string name="enter_accel_hint">加速率</string>
+    <string name="move_accel_saved">加速度を保存しました</string>
 </resources>
