@@ -13,6 +13,7 @@ class MainActivity : AppCompatActivity() {
     private val buttons = mutableMapOf<String, Button>()
     private lateinit var moveSpeedEditText: EditText
     private lateinit var moveAccelEditText: EditText
+    private lateinit var scrollDistanceEditText: EditText
     private var currentButton: Button? = null
     private var currentAction: String? = null
 
@@ -31,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         
         moveSpeedEditText = findViewById(R.id.moveSpeedEditText)
         moveAccelEditText = findViewById(R.id.moveAccelEditText)
+        scrollDistanceEditText = findViewById(R.id.scrollDistanceEditText)
 
         loadPreferences()
         setupListeners()
@@ -80,6 +82,15 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
+
+        scrollDistanceEditText.setOnEditorActionListener { _, _, _ ->
+            scrollDistanceEditText.text.toString().toIntOrNull()?.let {
+                scrollDistanceEditText.clearFocus()
+                SettingsManager.setScrollDistance(this, it)
+                Toast.makeText(this, getString(R.string.scroll_distance_saved), Toast.LENGTH_SHORT).show()
+            }
+            true
+        }
     }
 
     @SuppressLint("SetTextI18n")
@@ -89,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         }
         moveSpeedEditText.setText(SettingsManager.getMoveSpeed(this).toString())
         moveAccelEditText.setText(SettingsManager.getMoveAccel(this).toString())
+        scrollDistanceEditText.setText(SettingsManager.getScrollDistance(this).toString())
     }
 
     @SuppressLint("SetTextI18n")

@@ -7,6 +7,7 @@ import android.graphics.Path
 import android.graphics.PixelFormat
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.Surface
@@ -14,11 +15,13 @@ import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
+import androidx.core.view.doOnLayout
 
 class TapService : AccessibilityService() {
     private lateinit var windowManager: WindowManager
     private var pointerView: View? = null
     private val handler = Handler(Looper.getMainLooper())
+    private val movementHandler = Handler(Looper.getMainLooper())
     private val scrollRunnables = mutableMapOf<String, Runnable?>()
 
     private var pointerXPosition = 100
@@ -29,10 +32,16 @@ class TapService : AccessibilityService() {
     private var keyPressStartTime: Long = 0
     private var isMoving = false
     private var movementStartTime: Long = 0
+    private var pointerWidth = 0
+    private var pointerHeight = 0
 
     override fun onServiceConnected() {
-        windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
-        showPointer()
+        try {
+            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            showPointer()
+        } catch (e: Exception) {
+            Log.e("TapService", "Failed to initialize service", e)
+        }
     }
 
     private fun getKeyCodes(): Map<String, Int> {
@@ -89,11 +98,12 @@ class TapService : AccessibilityService() {
             
             val rotation = windowManager.defaultDisplay.rotation
             val rotatedDirection = getRotatedDirection(direction, rotation)
+            val scrollDistance = SettingsManager.getScrollDistance(this)
             val (dx, dy) = when (rotatedDirection) {
-                "up" -> Pair(0, -200)
-                "down" -> Pair(0, 200)
-                "left" -> Pair(-200, 0)
-                "right" -> Pair(200, 0)
+                "up" -> Pair(0, -scrollDistance)
+                "down" -> Pair(0, scrollDistance)
+                "left" -> Pair(-scrollDistance, 0)
+                "right" -> Pair(scrollDistance, 0)
                 else -> return
             }
             
@@ -107,7 +117,11 @@ class TapService : AccessibilityService() {
             val gesture = GestureDescription.Builder()
                 .addStroke(StrokeDescription(path, 0, 150))
                 .build()
-            dispatchGesture(gesture, null, null)
+            try {
+                dispatchGesture(gesture, null, null)
+            } catch (e: Exception) {
+                Log.e("TapService", "Failed to dispatch scroll gesture", e)
+            }
         }
     }
 
@@ -131,36 +145,47 @@ class TapService : AccessibilityService() {
         }
     }
 
+    private fun stopAllScrolling() {
+        scrollRunnables.keys.forEach { direction ->
+            stopScrolling(direction)
+        }
+    }
+
     override fun onKeyEvent(event: KeyEvent?): Boolean {
-        event?.let {
-            val keyCodes = getKeyCodes()
-            if (pointerView != null) {
-                when (it.keyCode) {
-                    keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
-                        when (it.action) {
-                            KeyEvent.ACTION_DOWN -> handleKeyDown(it, keyCodes)
-                            KeyEvent.ACTION_UP -> handleKeyUp(it, keyCodes)
+        return try {
+            event?.let {
+                val keyCodes = getKeyCodes()
+                if (pointerView != null) {
+                    when (it.keyCode) {
+                        keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
+                            when (it.action) {
+                                KeyEvent.ACTION_DOWN -> handleKeyDown(it, keyCodes)
+                                KeyEvent.ACTION_UP -> handleKeyUp(it, keyCodes)
+                            }
+                            return@let true
                         }
-                        return true
-                    }
-                    keyCodes["scrollup"], keyCodes["scrolldown"], keyCodes["scrollleft"], keyCodes["scrollright"] -> {
-                        val direction = when (it.keyCode) {
-                            keyCodes["scrollup"] -> "up"
-                            keyCodes["scrolldown"] -> "down"
-                            keyCodes["scrollleft"] -> "left"
-                            keyCodes["scrollright"] -> "right"
-                            else -> return false
+                        keyCodes["scrollup"], keyCodes["scrolldown"], keyCodes["scrollleft"], keyCodes["scrollright"] -> {
+                            val direction = when (it.keyCode) {
+                                keyCodes["scrollup"] -> "up"
+                                keyCodes["scrolldown"] -> "down"
+                                keyCodes["scrollleft"] -> "left"
+                                keyCodes["scrollright"] -> "right"
+                                else -> return@let false
+                            }
+                            handleScrollKey(it, direction)
+                            return@let true
                         }
-                        handleScrollKey(it, direction)
-                        return true
                     }
                 }
+                if (it.keyCode == keyCodes["disable"] && it.action == KeyEvent.ACTION_DOWN) {
+                    if (pointerView == null) showPointer() else removePointer()
+                }
             }
-            if (it.keyCode == keyCodes["disable"] && it.action == KeyEvent.ACTION_DOWN) {
-                if (pointerView == null) showPointer() else removePointer()
-            }
+            false
+        } catch (e: Exception) {
+            Log.e("TapService", "Error handling key event", e)
+            false
         }
-        return false
     }
 
     private fun handleScrollKey(event: KeyEvent, direction: String) {
@@ -207,7 +232,7 @@ class TapService : AccessibilityService() {
             movementStartTime = System.currentTimeMillis()
         }
         
-        handler.post(object : Runnable {
+        movementHandler.post(object : Runnable {
             override fun run() {
                 if (!isMoving) return
                 
@@ -218,49 +243,67 @@ class TapService : AccessibilityService() {
                 val newY = pointerYPosition + (dy * moveSpeed * accel * 0.2).toInt()
                 
                 val displayMetrics = resources.displayMetrics
-                val halfWidth = displayMetrics.widthPixels / 2
-                val halfHeight = displayMetrics.heightPixels / 2
-                pointerXPosition = newX.coerceIn(-halfWidth + 20, halfWidth + 17)
-                pointerYPosition = newY.coerceIn(-halfHeight + 30, halfHeight + 28)
+                val screenWidth = displayMetrics.widthPixels
+                val screenHeight = displayMetrics.heightPixels
+                val halfPointerWidth = pointerWidth / 2
+                val halfPointerHeight = pointerHeight / 2
+                
+                pointerXPosition = newX.coerceIn(-halfPointerWidth, screenWidth - halfPointerWidth)
+                pointerYPosition = newY.coerceIn(-halfPointerHeight, screenHeight - halfPointerHeight)
                 
                 updatePointerPosition()
                 
-                handler.postDelayed(this, 16)
+                movementHandler.postDelayed(this, 16)
             }
         })
     }
 
     private fun stopPointerMovement() {
         isMoving = false
-        handler.removeCallbacksAndMessages(null)
+        movementHandler.removeCallbacksAndMessages(null)
     }
 
     private fun showPointer() {
         if (pointerView == null) {
-            pointerView = LayoutInflater.from(this).inflate(R.layout.pointer_view, null)
-            val params = WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.WRAP_CONTENT,
-                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or 
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                PixelFormat.TRANSLUCENT
-            ).apply {
-                x = pointerXPosition
-                y = pointerYPosition
+            try {
+                pointerView = LayoutInflater.from(this).inflate(R.layout.pointer_view, null)
+                
+                pointerView?.doOnLayout {
+                    pointerWidth = it.width
+                    pointerHeight = it.height
+                }
+                
+                val params = WindowManager.LayoutParams(
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.WRAP_CONTENT,
+                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or 
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+                ).apply {
+                    x = pointerXPosition
+                    y = pointerYPosition
+                }
+                windowManager.addView(pointerView, params)
+                Toast.makeText(this, getString(R.string.pointer_shown), Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e("TapService", "Failed to show pointer", e)
+                pointerView = null
             }
-            windowManager.addView(pointerView, params)
-            Toast.makeText(this, getString(R.string.pointer_shown), Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun updatePointerPosition() {
         pointerView?.let {
-            val params = it.layoutParams as WindowManager.LayoutParams
-            params.x = pointerXPosition
-            params.y = pointerYPosition
-            windowManager.updateViewLayout(it, params)
+            try {
+                val params = it.layoutParams as WindowManager.LayoutParams
+                params.x = pointerXPosition
+                params.y = pointerYPosition
+                windowManager.updateViewLayout(it, params)
+            } catch (e: Exception) {
+                Log.e("TapService", "Failed to update pointer position", e)
+            }
         }
     }
 
@@ -278,24 +321,34 @@ class TapService : AccessibilityService() {
             val gesture = GestureDescription.Builder()
                 .addStroke(StrokeDescription(path, 0, pressDuration))
                 .build()
-            dispatchGesture(gesture, null, null)
+            try {
+                dispatchGesture(gesture, null, null)
+            } catch (e: Exception) {
+                Log.e("TapService", "Failed to dispatch tap gesture", e)
+            }
         }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {}
 
     override fun onInterrupt() {
+        stopAllScrolling()
         removePointer()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        stopAllScrolling()
         removePointer()
     }
 
     private fun removePointer() {
         pointerView?.let {
-            windowManager.removeView(it)
+            try {
+                windowManager.removeView(it)
+            } catch (e: Exception) {
+                Log.e("TapService", "Failed to remove pointer", e)
+            }
             pointerView = null
             Toast.makeText(this, getString(R.string.pointer_removed), Toast.LENGTH_SHORT).show()
         }

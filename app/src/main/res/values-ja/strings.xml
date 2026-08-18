@@ -27,4 +27,7 @@
     <string name="move_accel">加速度</string>
     <string name="enter_accel_hint">加速率</string>
     <string name="move_accel_saved">加速度を保存しました</string>
+    <string name="scroll_distance">スクロール距離</string>
+    <string name="enter_scroll_distance_hint">スクロール距離（ピクセル）</string>
+    <string name="scroll_distance_saved">スクロール距離を保存しました</string>
 </resources>

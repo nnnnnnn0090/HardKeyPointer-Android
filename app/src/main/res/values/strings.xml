@@ -27,4 +27,7 @@
     <string name="move_accel">Acceleration</string>
     <string name="enter_accel_hint">Acceleration rate</string>
     <string name="move_accel_saved">Acceleration saved</string>
+    <string name="scroll_distance">Scroll Distance</string>
+    <string name="enter_scroll_distance_hint">Scroll distance (pixels)</string>
+    <string name="scroll_distance_saved">Scroll distance saved</string>
 </resources>

@@ -41,6 +41,9 @@ object SettingsManager {
     fun getMoveAccel(context: Context): Int = getPrefs(context).getInt("moveAccel", 100)
     fun setMoveAccel(context: Context, accel: Int) = getPrefs(context).edit().putInt("moveAccel", accel).apply()
     
+    fun getScrollDistance(context: Context): Int = getPrefs(context).getInt("scrollDistance", 200)
+    fun setScrollDistance(context: Context, distance: Int) = getPrefs(context).edit().putInt("scrollDistance", distance).apply()
+    
     fun getAllKeyCodes(context: Context): Map<String, Int> =
         defaultKeys.mapValues { (action, default) -> getKeyCode(context, action) }
 }

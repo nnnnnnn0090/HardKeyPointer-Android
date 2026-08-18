@@ -138,6 +138,24 @@
                 android:textSize="16sp"
                 android:layout_marginBottom="10dp" />
 
+            <!-- Scroll Distance -->
+            <TextView
+                android:id="@+id/scrollDistanceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/scroll_distance"
+                android:textSize="16sp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+            <EditText
+                android:id="@+id/scrollDistanceEditText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:hint="@string/enter_scroll_distance_hint"
+                android:textSize="16sp"
+                android:layout_marginBottom="10dp" />
+
             <!-- Scroll Up -->
             <TextView
                 android:id="@+id/scrollupKeyCodeLabel"
