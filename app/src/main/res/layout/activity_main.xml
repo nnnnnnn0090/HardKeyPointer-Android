@@ -235,6 +235,49 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Zoom -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/SectionHeader"
+                        android:text="@string/section_zoom" />
+
+                    <!-- Zoom in -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/zoomInKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/zoom_in" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/zoomInKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Zoom out -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/zoomOutKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/zoom_out" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/zoomOutKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Pointer toggle -->
             <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
 
@@ -276,10 +319,36 @@
                         style="@style/SectionHeader"
                         android:text="@string/section_settings" />
 
+                    <com.google.android.material.button.MaterialButtonToggleGroup
+                        android:id="@+id/coordinateModeGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
+                        app:singleSelection="true"
+                        app:selectionRequired="true">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/pixelModeButton"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mode_pixels" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/ratioModeButton"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/mode_ratio" />
+                    </com.google.android.material.button.MaterialButtonToggleGroup>
+
                     <!-- Move speed -->
                     <LinearLayout style="@style/SettingRow">
 
                         <TextView
+                            android:id="@+id/moveSpeedLabel"
                             style="@style/SettingLabel"
                             android:text="@string/move_speed" />
 
@@ -324,6 +393,7 @@
                     <LinearLayout style="@style/SettingRow">
 
                         <TextView
+                            android:id="@+id/scrollDistanceLabel"
                             style="@style/SettingLabel"
                             android:text="@string/scroll_distance" />
 
@@ -341,6 +411,73 @@
                         android:valueTo="500"
                         android:stepSize="10"
                         android:value="200" />
+
+                    <!-- Scroll speed -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_speed" />
+
+                        <TextView
+                            android:id="@+id/scrollSpeedValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/scrollSpeedSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="1"
+                        android:valueTo="10"
+                        android:stepSize="1"
+                        android:value="8" />
+
+                    <!-- Zoom amount -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/zoomAmountLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/zoom_amount" />
+
+                        <TextView
+                            android:id="@+id/zoomAmountValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/zoomAmountSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="1"
+                        android:valueTo="10"
+                        android:stepSize="1"
+                        android:value="3" />
+
+                    <!-- Zoom duration -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/zoom_duration" />
+
+                        <TextView
+                            android:id="@+id/zoomDurationValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/zoomDurationSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="100"
+                        android:valueTo="1000"
+                        android:stepSize="50"
+                        android:value="300" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

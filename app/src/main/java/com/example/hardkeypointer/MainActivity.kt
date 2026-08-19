@@ -13,7 +13,9 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
+import kotlin.math.roundToInt
 
 /** キー割り当て、移動設定、サービス状態を管理する設定画面です。 */
 class MainActivity : AppCompatActivity() {
@@ -38,9 +40,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         initializeBindingButtons()
+        initializeCoordinateMode()
         initializeSliders()
         findViewById<Button>(R.id.license_button).setOnClickListener {
             LicenseUtils.showLicenseDialog(this)
+        }
+    }
+
+    /** pxモードと割合モードの切り替えを初期化します。 */
+    private fun initializeCoordinateMode() {
+        val group = findViewById<MaterialButtonToggleGroup>(R.id.coordinateModeGroup)
+        group.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (!isChecked) return@addOnButtonCheckedListener
+            val mode = when (checkedId) {
+                R.id.pixelModeButton -> CoordinateMode.PIXELS
+                R.id.ratioModeButton -> CoordinateMode.RATIO
+                else -> return@addOnButtonCheckedListener
+            }
+            if (mode != settings.getCoordinateMode()) {
+                settings.setCoordinateMode(mode)
+                renderSettings()
+            }
         }
     }
 
@@ -69,7 +89,9 @@ class MainActivity : AppCompatActivity() {
             PointerAction.SCROLL_UP to R.id.scrollupKeyCodeButton,
             PointerAction.SCROLL_DOWN to R.id.scrolldownKeyCodeButton,
             PointerAction.SCROLL_LEFT to R.id.scrollleftKeyCodeButton,
-            PointerAction.SCROLL_RIGHT to R.id.scrollrightKeyCodeButton
+            PointerAction.SCROLL_RIGHT to R.id.scrollrightKeyCodeButton,
+            PointerAction.ZOOM_IN to R.id.zoomInKeyCodeButton,
+            PointerAction.ZOOM_OUT to R.id.zoomOutKeyCodeButton
         )
         buttonIds.forEach { (action, id) ->
             val button = findViewById<Button>(id)
@@ -85,28 +107,79 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** 移動速度・加速度・スクロール距離のスライダーを初期化します。 */
+    /** 移動、加速度、スクロール、ズームの各スライダーを初期化します。 */
     private fun initializeSliders() {
-        configureSlider(
-            slider = findViewById(R.id.moveSpeedSlider),
-            value = findViewById(R.id.moveSpeedValue),
-            initialValue = settings.getMoveSpeed().toFloat(),
-            onChange = settings::setMoveSpeed,
-            formatter = { getString(R.string.value_px, it) }
-        )
+        configureSpatialSliders()
+        configureModeSpecificSliders()
+    }
+
+    /** 座標モードごとに独立した速度・加速度系スライダーを初期化します。 */
+    private fun configureModeSpecificSliders() {
+        val mode = settings.getCoordinateMode()
         configureSlider(
             slider = findViewById(R.id.moveAccelSlider),
             value = findViewById(R.id.moveAccelValue),
-            initialValue = settings.getMoveAcceleration().toFloat(),
-            onChange = settings::setMoveAcceleration,
+            initialValue = settings.getMoveAcceleration(mode).toFloat(),
+            onChange = { settings.setMoveAcceleration(mode, it) },
             formatter = { getString(R.string.value_percent, it) }
+        )
+        configureSlider(
+            slider = findViewById(R.id.scrollSpeedSlider),
+            value = findViewById(R.id.scrollSpeedValue),
+            initialValue = settings.getScrollSpeed(mode).toFloat(),
+            onChange = { settings.setScrollSpeed(mode, it) },
+            formatter = { getString(R.string.value_speed, it) }
+        )
+        configureSlider(
+            slider = findViewById(R.id.zoomDurationSlider),
+            value = findViewById(R.id.zoomDurationValue),
+            initialValue = settings.getZoomDuration(mode).toFloat(),
+            onChange = { settings.setZoomDuration(mode, it) },
+            formatter = { getString(R.string.value_ms, it) }
+        )
+    }
+
+    /** 現在の座標モードに合わせて距離系スライダーを再構成します。 */
+    private fun configureSpatialSliders() {
+        val mode = settings.getCoordinateMode()
+        val isPixels = mode == CoordinateMode.PIXELS
+        configureSlider(
+            slider = findViewById(R.id.moveSpeedSlider),
+            value = findViewById(R.id.moveSpeedValue),
+            initialValue = settings.getMoveSpeed(mode).toFloat(),
+            min = if (isPixels) SettingsRepository.MIN_MOVE_SPEED_PX.toFloat()
+            else SettingsRepository.MIN_MOVE_SPEED_RATIO.toFloat(),
+            max = if (isPixels) SettingsRepository.MAX_MOVE_SPEED_PX.toFloat()
+            else SettingsRepository.MAX_MOVE_SPEED_RATIO.toFloat(),
+            step = 1f,
+            onChange = { settings.setMoveSpeed(mode, it) },
+            formatter = {
+                getString(if (isPixels) R.string.value_px_per_frame else R.string.value_percent_per_second, it)
+            }
         )
         configureSlider(
             slider = findViewById(R.id.scrollDistanceSlider),
             value = findViewById(R.id.scrollDistanceValue),
-            initialValue = settings.getScrollDistance().toFloat(),
-            onChange = settings::setScrollDistance,
-            formatter = { getString(R.string.value_px, it) }
+            initialValue = settings.getScrollDistance(mode).toFloat(),
+            min = if (isPixels) SettingsRepository.MIN_SCROLL_DISTANCE_PX.toFloat()
+            else SettingsRepository.MIN_SCROLL_DISTANCE_RATIO.toFloat(),
+            max = if (isPixels) SettingsRepository.MAX_SCROLL_DISTANCE_PX.toFloat()
+            else SettingsRepository.MAX_SCROLL_DISTANCE_RATIO.toFloat(),
+            step = if (isPixels) 10f else 1f,
+            onChange = { settings.setScrollDistance(mode, it) },
+            formatter = { getString(if (isPixels) R.string.value_px else R.string.value_percent, it) }
+        )
+        configureSlider(
+            slider = findViewById(R.id.zoomAmountSlider),
+            value = findViewById(R.id.zoomAmountValue),
+            initialValue = settings.getZoomAmount(mode).toFloat(),
+            min = if (isPixels) SettingsRepository.MIN_ZOOM_AMOUNT_PX.toFloat()
+            else SettingsRepository.MIN_ZOOM_AMOUNT_RATIO.toFloat(),
+            max = if (isPixels) SettingsRepository.MAX_ZOOM_AMOUNT_PX.toFloat()
+            else SettingsRepository.MAX_ZOOM_AMOUNT_RATIO.toFloat(),
+            step = if (isPixels) 12f else 1f,
+            onChange = { settings.setZoomAmount(mode, it) },
+            formatter = { getString(if (isPixels) R.string.value_px else R.string.value_percent, it) }
         )
     }
 
@@ -115,10 +188,17 @@ class MainActivity : AppCompatActivity() {
         slider: Slider,
         value: TextView,
         initialValue: Float,
+        min: Float = slider.valueFrom,
+        max: Float = slider.valueTo,
+        step: Float = slider.stepSize,
         onChange: (Int) -> Unit,
         formatter: (Int) -> String
     ) {
-        slider.value = initialValue.coerceIn(slider.valueFrom, slider.valueTo)
+        slider.valueFrom = min
+        slider.valueTo = max
+        slider.stepSize = step
+        slider.clearOnChangeListeners()
+        slider.value = normalizeSliderValue(slider, initialValue)
         value.text = formatter(slider.value.toInt())
         slider.addOnChangeListener { _, newValue, _ ->
             val intValue = newValue.toInt()
@@ -151,20 +231,69 @@ class MainActivity : AppCompatActivity() {
         bindingButtons.forEach { (action, button) ->
             button.text = KeyNameFormatter.format(this, settings.getKeyCode(action))
         }
+        val mode = settings.getCoordinateMode()
+        findViewById<MaterialButtonToggleGroup>(R.id.coordinateModeGroup).check(
+            if (mode == CoordinateMode.PIXELS) R.id.pixelModeButton else R.id.ratioModeButton
+        )
+        findViewById<TextView>(R.id.moveSpeedLabel).setText(
+            if (mode == CoordinateMode.PIXELS) R.string.move_speed_px
+            else R.string.move_speed_ratio
+        )
+        findViewById<TextView>(R.id.scrollDistanceLabel).setText(
+            if (mode == CoordinateMode.PIXELS) R.string.scroll_distance_px
+            else R.string.scroll_distance_ratio
+        )
+        findViewById<TextView>(R.id.zoomAmountLabel).setText(
+            if (mode == CoordinateMode.PIXELS) R.string.zoom_amount_px
+            else R.string.zoom_amount_ratio
+        )
+        configureSpatialSliders()
+        configureModeSpecificSliders()
         setSliderValue(R.id.moveSpeedSlider, settings.getMoveSpeed())
-        setSliderValue(R.id.moveAccelSlider, settings.getMoveAcceleration())
+        setSliderValue(R.id.moveAccelSlider, settings.getMoveAcceleration(mode))
         setSliderValue(R.id.scrollDistanceSlider, settings.getScrollDistance())
+        setSliderValue(R.id.scrollSpeedSlider, settings.getScrollSpeed(mode))
+        setSliderValue(R.id.zoomAmountSlider, settings.getZoomAmount())
+        setSliderValue(R.id.zoomDurationSlider, settings.getZoomDuration(mode))
         findViewById<TextView>(R.id.moveSpeedValue).text =
-            getString(R.string.value_px, settings.getMoveSpeed())
+            getString(
+                if (mode == CoordinateMode.PIXELS) R.string.value_px_per_frame
+                else R.string.value_percent_per_second,
+                settings.getMoveSpeed()
+            )
         findViewById<TextView>(R.id.moveAccelValue).text =
-            getString(R.string.value_percent, settings.getMoveAcceleration())
+            getString(R.string.value_percent, settings.getMoveAcceleration(mode))
         findViewById<TextView>(R.id.scrollDistanceValue).text =
-            getString(R.string.value_px, settings.getScrollDistance())
+            getString(
+                if (mode == CoordinateMode.PIXELS) R.string.value_px
+                else R.string.value_percent,
+                settings.getScrollDistance()
+            )
+        findViewById<TextView>(R.id.scrollSpeedValue).text =
+            getString(R.string.value_speed, settings.getScrollSpeed(mode))
+        findViewById<TextView>(R.id.zoomAmountValue).text =
+            getString(
+                if (mode == CoordinateMode.PIXELS) R.string.value_px
+                else R.string.value_percent,
+                settings.getZoomAmount()
+            )
+        findViewById<TextView>(R.id.zoomDurationValue).text =
+            getString(R.string.value_ms, settings.getZoomDuration(mode))
     }
 
     /** 指定IDのスライダーへ範囲内の値を設定します。 */
     private fun setSliderValue(id: Int, value: Int) {
-        findViewById<Slider>(id).value = value.toFloat()
+        val slider = findViewById<Slider>(id)
+        slider.value = normalizeSliderValue(slider, value.toFloat())
+    }
+
+    /** 保存値をスライダーの範囲と刻みに合わせて補正します。 */
+    private fun normalizeSliderValue(slider: Slider, value: Float): Float {
+        val bounded = value.coerceIn(slider.valueFrom, slider.valueTo)
+        if (slider.stepSize <= 0f) return bounded
+        val steps = ((bounded - slider.valueFrom) / slider.stepSize).roundToInt()
+        return (slider.valueFrom + steps * slider.stepSize)
+            .coerceIn(slider.valueFrom, slider.valueTo)
     }
 
     /** 指定ボタンをフォーカスし、次の物理キーを割り当てる状態にします。 */

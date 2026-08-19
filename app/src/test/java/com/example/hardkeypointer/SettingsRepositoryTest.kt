@@ -69,28 +69,37 @@ class SettingsRepositoryTest {
     /** 数値設定の既定値が返されることを確認します。 */
     @Test
     fun numericSettings_useDefaults() {
-        `when`(mockPrefs.getInt("moveSpeed", SettingsRepository.DEFAULT_MOVE_SPEED))
-            .thenReturn(SettingsRepository.DEFAULT_MOVE_SPEED)
-        `when`(mockPrefs.getInt("moveAccel", SettingsRepository.DEFAULT_MOVE_ACCELERATION))
+        `when`(mockPrefs.getInt("moveSpeedPx", SettingsRepository.DEFAULT_MOVE_SPEED_PX))
+            .thenReturn(SettingsRepository.DEFAULT_MOVE_SPEED_PX)
+        `when`(mockPrefs.getInt("moveAccelerationPx", SettingsRepository.DEFAULT_MOVE_ACCELERATION))
             .thenReturn(SettingsRepository.DEFAULT_MOVE_ACCELERATION)
-        `when`(mockPrefs.getInt("scrollDistance", SettingsRepository.DEFAULT_SCROLL_DISTANCE))
-            .thenReturn(SettingsRepository.DEFAULT_SCROLL_DISTANCE)
+        `when`(mockPrefs.getInt("scrollDistancePx", SettingsRepository.DEFAULT_SCROLL_DISTANCE_PX))
+            .thenReturn(SettingsRepository.DEFAULT_SCROLL_DISTANCE_PX)
+        `when`(mockPrefs.getInt("scrollSpeedPx", SettingsRepository.DEFAULT_SCROLL_SPEED))
+            .thenReturn(SettingsRepository.DEFAULT_SCROLL_SPEED)
+        `when`(mockPrefs.getInt("zoomAmountPx", SettingsRepository.DEFAULT_ZOOM_AMOUNT_PX))
+            .thenReturn(SettingsRepository.DEFAULT_ZOOM_AMOUNT_PX)
+        `when`(mockPrefs.getInt("zoomDurationPx", SettingsRepository.DEFAULT_ZOOM_DURATION))
+            .thenReturn(SettingsRepository.DEFAULT_ZOOM_DURATION)
 
-        assertEquals(SettingsRepository.DEFAULT_MOVE_SPEED, repository.getMoveSpeed())
+        assertEquals(SettingsRepository.DEFAULT_MOVE_SPEED_PX, repository.getMoveSpeed())
         assertEquals(SettingsRepository.DEFAULT_MOVE_ACCELERATION, repository.getMoveAcceleration())
-        assertEquals(SettingsRepository.DEFAULT_SCROLL_DISTANCE, repository.getScrollDistance())
+        assertEquals(SettingsRepository.DEFAULT_SCROLL_DISTANCE_PX, repository.getScrollDistance())
+        assertEquals(SettingsRepository.DEFAULT_SCROLL_SPEED, repository.getScrollSpeed())
+        assertEquals(SettingsRepository.DEFAULT_ZOOM_AMOUNT_PX, repository.getZoomAmount())
+        assertEquals(SettingsRepository.DEFAULT_ZOOM_DURATION, repository.getZoomDuration())
     }
 
     /** 読み込み時に数値設定が許容範囲へ補正されることを確認します。 */
     @Test
     fun numericSettings_areClampedToSupportedRanges() {
-        `when`(mockPrefs.getInt("moveSpeed", SettingsRepository.DEFAULT_MOVE_SPEED)).thenReturn(999)
-        `when`(mockPrefs.getInt("moveAccel", SettingsRepository.DEFAULT_MOVE_ACCELERATION)).thenReturn(-10)
-        `when`(mockPrefs.getInt("scrollDistance", SettingsRepository.DEFAULT_SCROLL_DISTANCE)).thenReturn(1)
+        `when`(mockPrefs.getInt("moveSpeedPx", SettingsRepository.DEFAULT_MOVE_SPEED_PX)).thenReturn(999)
+        `when`(mockPrefs.getInt("moveAccelerationPx", SettingsRepository.DEFAULT_MOVE_ACCELERATION)).thenReturn(-10)
+        `when`(mockPrefs.getInt("scrollDistancePx", SettingsRepository.DEFAULT_SCROLL_DISTANCE_PX)).thenReturn(1)
 
-        assertEquals(SettingsRepository.MAX_MOVE_SPEED, repository.getMoveSpeed())
+        assertEquals(SettingsRepository.MAX_MOVE_SPEED_PX, repository.getMoveSpeed())
         assertEquals(SettingsRepository.MIN_MOVE_ACCELERATION, repository.getMoveAcceleration())
-        assertEquals(SettingsRepository.MIN_SCROLL_DISTANCE, repository.getScrollDistance())
+        assertEquals(SettingsRepository.MIN_SCROLL_DISTANCE_PX, repository.getScrollDistance())
     }
 
     /** 保存時にも数値設定が許容範囲へ補正されることを確認します。 */
@@ -100,9 +109,9 @@ class SettingsRepositoryTest {
         repository.setMoveAcceleration(Int.MIN_VALUE)
         repository.setScrollDistance(Int.MAX_VALUE)
 
-        verify(mockPrefs.edit()).putInt("moveSpeed", SettingsRepository.MAX_MOVE_SPEED)
-        verify(mockPrefs.edit()).putInt("moveAccel", SettingsRepository.MIN_MOVE_ACCELERATION)
-        verify(mockPrefs.edit()).putInt("scrollDistance", SettingsRepository.MAX_SCROLL_DISTANCE)
+        verify(mockPrefs.edit()).putInt("moveSpeedPx", SettingsRepository.MAX_MOVE_SPEED_PX)
+        verify(mockPrefs.edit()).putInt("moveAccelerationPx", SettingsRepository.MIN_MOVE_ACCELERATION)
+        verify(mockPrefs.edit()).putInt("scrollDistancePx", SettingsRepository.MAX_SCROLL_DISTANCE_PX)
     }
 
     /** 全操作のキー割り当てが取得できることを確認します。 */

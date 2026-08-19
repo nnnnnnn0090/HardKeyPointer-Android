@@ -13,8 +13,11 @@
 
     <string name="section_pointer">ポインタ移動</string>
     <string name="section_scroll">スクロール</string>
+    <string name="section_zoom">ズーム</string>
     <string name="section_toggle">ポインタ表示切り替え</string>
     <string name="section_settings">設定</string>
+    <string name="mode_pixels">ピクセル指定</string>
+    <string name="mode_ratio">画面割合指定</string>
 
     <string name="key_settings">キー設定</string>
     <string name="up_move_key_code">上移動</string>
@@ -23,14 +26,18 @@
     <string name="right_move_key_code">右移動</string>
     <string name="tap_key_code">タップ/クリック</string>
     <string name="move_speed">移動速度</string>
+    <string name="move_speed_px">移動速度（px/フレーム）</string>
+    <string name="move_speed_ratio">移動速度（%/秒）</string>
     <string name="scroll_up">上スクロール</string>
     <string name="scroll_down">下スクロール</string>
     <string name="scroll_left">左スクロール</string>
     <string name="scroll_right">右スクロール</string>
+    <string name="zoom_in">ズームイン</string>
+    <string name="zoom_out">ズームアウト</string>
     <string name="disable_key_code">ポインタ表示/非表示</string>
     <string name="set_button">設定</string>
     <string name="license_button">ライセンス</string>
-    <string name="credit">© 2026 Hizuru Lab / nnnnnnn0090</string>
+    <string name="credit">© 2026 Kofune Lab / nnnnnnn0090</string>
     <string name="enter_speed_hint">移動速度</string>
     <string name="move_speed_saved">速度を保存しました</string>
     <string name="not_set">未設定</string>
@@ -43,8 +50,20 @@
     <string name="enter_accel_hint">加速率</string>
     <string name="move_accel_saved">加速度を保存しました</string>
     <string name="scroll_distance">スクロール距離</string>
+    <string name="scroll_distance_px">スクロール距離（px）</string>
+    <string name="scroll_distance_ratio">スクロール距離（画面の%）</string>
+    <string name="scroll_speed">スクロール速度</string>
+    <string name="zoom_amount">ズーム量</string>
+    <string name="zoom_amount_px">ズーム量（px）</string>
+    <string name="zoom_amount_ratio">ズーム量（画面の%）</string>
+    <string name="zoom_duration">ズーム速度</string>
     <string name="enter_scroll_distance_hint">スクロール距離（ピクセル）</string>
     <string name="scroll_distance_saved">スクロール距離を保存しました</string>
     <string name="value_px">%1$d px</string>
     <string name="value_percent">%1$d%%</string>
+    <string name="value_ms">%1$d ms</string>
+    <string name="value_speed">速度 %1$d/10</string>
+    <string name="value_amount">量 %1$d/10</string>
+    <string name="value_px_per_frame">%1$d px/フレーム</string>
+    <string name="value_percent_per_second">%1$d%%/秒</string>
 </resources>

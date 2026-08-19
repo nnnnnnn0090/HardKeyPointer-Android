@@ -13,8 +13,11 @@
 
     <string name="section_pointer">Pointer Movement</string>
     <string name="section_scroll">Scroll</string>
+    <string name="section_zoom">Zoom</string>
     <string name="section_toggle">Pointer Toggle</string>
     <string name="section_settings">Settings</string>
+    <string name="mode_pixels">Pixels</string>
+    <string name="mode_ratio">Screen Ratio</string>
 
     <string name="key_settings">Key Settings</string>
     <string name="up_move_key_code">Move Up</string>
@@ -23,14 +26,18 @@
     <string name="right_move_key_code">Move Right</string>
     <string name="tap_key_code">Tap/Click</string>
     <string name="move_speed">Movement Speed</string>
+    <string name="move_speed_px">Movement Speed (px/frame)</string>
+    <string name="move_speed_ratio">Movement Speed (%/second)</string>
     <string name="scroll_up">Scroll Up</string>
     <string name="scroll_down">Scroll Down</string>
     <string name="scroll_left">Scroll Left</string>
     <string name="scroll_right">Scroll Right</string>
+    <string name="zoom_in">Zoom In</string>
+    <string name="zoom_out">Zoom Out</string>
     <string name="disable_key_code">Show/Hide Pointer</string>
     <string name="set_button">Set</string>
     <string name="license_button">License</string>
-    <string name="credit">© 2026 Hizuru Lab / nnnnnnn0090</string>
+    <string name="credit">© 2026 Kofune Lab / nnnnnnn0090</string>
     <string name="enter_speed_hint">Movement speed</string>
     <string name="move_speed_saved">Speed saved</string>
     <string name="not_set">Not set</string>
@@ -43,8 +50,20 @@
     <string name="enter_accel_hint">Acceleration rate</string>
     <string name="move_accel_saved">Acceleration saved</string>
     <string name="scroll_distance">Scroll Distance</string>
+    <string name="scroll_distance_px">Scroll Distance (px)</string>
+    <string name="scroll_distance_ratio">Scroll Distance (% of screen)</string>
+    <string name="scroll_speed">Scroll Speed</string>
+    <string name="zoom_amount">Zoom Amount</string>
+    <string name="zoom_amount_px">Zoom Amount (px)</string>
+    <string name="zoom_amount_ratio">Zoom Amount (% of screen)</string>
+    <string name="zoom_duration">Zoom Speed</string>
     <string name="enter_scroll_distance_hint">Scroll distance (pixels)</string>
     <string name="scroll_distance_saved">Scroll distance saved</string>
     <string name="value_px">%1$d px</string>
     <string name="value_percent">%1$d%%</string>
+    <string name="value_ms">%1$d ms</string>
+    <string name="value_speed">Speed %1$d/10</string>
+    <string name="value_amount">Amount %1$d/10</string>
+    <string name="value_px_per_frame">%1$d px/frame</string>
+    <string name="value_percent_per_second">%1$d%%/second</string>
 </resources>

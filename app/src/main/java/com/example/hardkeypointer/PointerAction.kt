@@ -22,7 +22,9 @@ enum class PointerAction(
     SCROLL_UP("scrollup", KeyEvent.KEYCODE_2),
     SCROLL_DOWN("scrolldown", KeyEvent.KEYCODE_5),
     SCROLL_LEFT("scrollleft", KeyEvent.KEYCODE_4),
-    SCROLL_RIGHT("scrollright", KeyEvent.KEYCODE_6);
+    SCROLL_RIGHT("scrollright", KeyEvent.KEYCODE_6),
+    ZOOM_IN("zoomin", KeyEvent.KEYCODE_9),
+    ZOOM_OUT("zoomout", KeyEvent.KEYCODE_7);
 
     companion object {
         /** 保存キー名から対応する操作を検索します。 */

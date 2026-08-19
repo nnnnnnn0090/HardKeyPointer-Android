@@ -12,6 +12,7 @@ import android.os.Handler
 class PointerMovementController(
     private val handler: Handler,
     private val settingsProvider: () -> MovementSettings,
+    private val screenSizeProvider: () -> Pair<Int, Int>,
     private val move: (Int, Int) -> Unit
 ) {
     private var directionX = 0
@@ -32,7 +33,15 @@ class PointerMovementController(
             }
             // 各フレームで最新設定を読み、サービスを再起動せずに
             // スライダー変更を即時反映します。
-            val distance = (settings.speed * acceleration * FRAME_FACTOR).toInt()
+            val (screenWidth, screenHeight) = screenSizeProvider()
+            val axisPixels = if (directionX != 0) screenWidth else screenHeight
+            val baseDistance = if (settings.coordinateMode == CoordinateMode.PIXELS) {
+                settings.speed * FRAME_FACTOR
+            } else {
+                axisPixels.coerceAtLeast(1).toFloat() * settings.speed / RATIO_SCALE *
+                    FRAME_INTERVAL_MS.toFloat() / MILLIS_PER_SECOND
+            }
+            val distance = (baseDistance * acceleration).toInt().coerceAtLeast(1)
             move(directionX * distance, directionY * distance)
             handler.postDelayed(this, FRAME_INTERVAL_MS)
         }
@@ -58,6 +67,8 @@ class PointerMovementController(
     companion object {
         private const val FRAME_INTERVAL_MS = 16L
         private const val ACCELERATION_SCALE = 10_000.0
-        private const val FRAME_FACTOR = 0.2
+        private const val FRAME_FACTOR = 0.2f
+        private const val RATIO_SCALE = 100f
+        private const val MILLIS_PER_SECOND = 1_000f
     }
 }

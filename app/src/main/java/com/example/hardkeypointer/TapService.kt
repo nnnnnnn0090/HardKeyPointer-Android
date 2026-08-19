@@ -31,6 +31,7 @@ class TapService : AccessibilityService() {
     private val capturedKeys = mutableSetOf<Int>()
     private var tapStartedAt = 0L
     private var backActionInProgress = false
+    private var zoomKeyDownCode: Int? = null
 
     /** サービス接続時に設定、オーバーレイ、入力制御を初期化します。 */
     override fun onServiceConnected() {
@@ -40,16 +41,23 @@ class TapService : AccessibilityService() {
             pointer = PointerOverlayController(this, windowManager)
             gestures = GestureController(
                 overlay = pointer,
-                scrollDistanceProvider = settings::getScrollDistance,
+                spatialSettingsProvider = settings::getSpatialSettings,
+                scrollDurationProvider = { scrollIntervalMillis(settings.getScrollSpeed()).toInt() },
+                zoomDurationProvider = settings::getZoomDuration,
                 rotationProvider = ::currentRotation,
                 dispatch = ::dispatchGestureSafely
             )
             movement = PointerMovementController(
                 handler = movementHandler,
                 settingsProvider = settings::getMovementSettings,
+                screenSizeProvider = pointer::screenSize,
                 move = pointer::moveBy
             )
-            scrollRepeater = ScrollRepeater(handler, gestures::scroll)
+            scrollRepeater = ScrollRepeater(
+                handler = handler,
+                onScroll = gestures::scroll,
+                intervalProvider = { scrollIntervalMillis(settings.getScrollSpeed()).toInt() }
+            )
             showPointer()
         } catch (error: Exception) {
             Log.e(TAG, "Failed to initialize service", error)
@@ -79,6 +87,10 @@ class TapService : AccessibilityService() {
                 }
                 isScrollKey(keyEvent, keyCodes) -> {
                     handleScroll(keyEvent, keyCodes)
+                    true
+                }
+                isZoomKey(keyEvent, keyCodes) -> {
+                    handleZoom(keyEvent, keyCodes)
                     true
                 }
                 keyEvent.keyCode == KeyEvent.KEYCODE_BACK -> handleBack(keyEvent)
@@ -146,6 +158,14 @@ class TapService : AccessibilityService() {
             event.keyCode == keyCodes.getValue(PointerAction.SCROLL_LEFT) ||
             event.keyCode == keyCodes.getValue(PointerAction.SCROLL_RIGHT)
 
+    /** イベントがいずれかのズーム操作キーか判定します。 */
+    private fun isZoomKey(
+        event: KeyEvent,
+        keyCodes: Map<PointerAction, Int>
+    ): Boolean =
+        event.keyCode == keyCodes.getValue(PointerAction.ZOOM_IN) ||
+            event.keyCode == keyCodes.getValue(PointerAction.ZOOM_OUT)
+
     /** 移動キーの押下・解放とタップの押下時間を処理します。 */
     private fun handleMovementOrTap(
         event: KeyEvent,
@@ -193,6 +213,30 @@ class TapService : AccessibilityService() {
         }
     }
 
+    /** ズームキーの長押しリピートを抑制し、押下ごとに1回だけ実行します。 */
+    private fun handleZoom(event: KeyEvent, keyCodes: Map<PointerAction, Int>) {
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> {
+                if (zoomKeyDownCode != null) return
+                zoomKeyDownCode = event.keyCode
+                when (event.keyCode) {
+                    keyCodes.getValue(PointerAction.ZOOM_IN) -> gestures.zoomIn()
+                    keyCodes.getValue(PointerAction.ZOOM_OUT) -> gestures.zoomOut()
+                }
+            }
+            KeyEvent.ACTION_UP -> {
+                if (zoomKeyDownCode == event.keyCode) zoomKeyDownCode = null
+            }
+        }
+    }
+
+    /** スクロール速度レベルをジェスチャー間隔へ変換します。 */
+    private fun scrollIntervalMillis(speed: Int): Long =
+        MAX_SCROLL_INTERVAL_MS -
+            (speed.coerceIn(MIN_SCROLL_SPEED, MAX_SCROLL_SPEED) - MIN_SCROLL_SPEED) *
+            (MAX_SCROLL_INTERVAL_MS - MIN_SCROLL_INTERVAL_MS).toLong() /
+            (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED)
+
     /** キーコードを画面回転前の論理移動方向へ変換します。 */
     private fun movementDirection(
         keyCode: Int,
@@ -229,6 +273,7 @@ class TapService : AccessibilityService() {
         if (::scrollRepeater.isInitialized) scrollRepeater.stopAll()
         if (::movement.isInitialized) movement.stop()
         tapStartedAt = 0L
+        zoomKeyDownCode = null
         if (::pointer.isInitialized && pointer.hide()) {
             Toast.makeText(this, R.string.pointer_removed, Toast.LENGTH_SHORT).show()
         }
@@ -268,5 +313,9 @@ class TapService : AccessibilityService() {
     companion object {
         private const val TAG = "TapService"
         private const val BACK_DEBOUNCE_MS = 300L
+        private const val MIN_SCROLL_INTERVAL_MS = 50L
+        private const val MAX_SCROLL_INTERVAL_MS = 500L
+        private const val MIN_SCROLL_SPEED = 1
+        private const val MAX_SCROLL_SPEED = 10
     }
 }

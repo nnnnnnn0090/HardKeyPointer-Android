@@ -15,15 +15,15 @@ import android.content.Context
 @Deprecated("Use SettingsRepository and KeyCaptureState")
 object SettingsManager {
     const val NOT_SET = SettingsRepository.NOT_SET
-    const val DEFAULT_MOVE_SPEED = SettingsRepository.DEFAULT_MOVE_SPEED
+    const val DEFAULT_MOVE_SPEED = SettingsRepository.DEFAULT_MOVE_SPEED_PX
     const val DEFAULT_MOVE_ACCEL = SettingsRepository.DEFAULT_MOVE_ACCELERATION
-    const val DEFAULT_SCROLL_DISTANCE = SettingsRepository.DEFAULT_SCROLL_DISTANCE
-    const val MIN_MOVE_SPEED = SettingsRepository.MIN_MOVE_SPEED
-    const val MAX_MOVE_SPEED = SettingsRepository.MAX_MOVE_SPEED
+    const val DEFAULT_SCROLL_DISTANCE = SettingsRepository.DEFAULT_SCROLL_DISTANCE_PX
+    const val MIN_MOVE_SPEED = SettingsRepository.MIN_MOVE_SPEED_PX
+    const val MAX_MOVE_SPEED = SettingsRepository.MAX_MOVE_SPEED_PX
     const val MIN_MOVE_ACCEL = SettingsRepository.MIN_MOVE_ACCELERATION
     const val MAX_MOVE_ACCEL = SettingsRepository.MAX_MOVE_ACCELERATION
-    const val MIN_SCROLL_DISTANCE = SettingsRepository.MIN_SCROLL_DISTANCE
-    const val MAX_SCROLL_DISTANCE = SettingsRepository.MAX_SCROLL_DISTANCE
+    const val MIN_SCROLL_DISTANCE = SettingsRepository.MIN_SCROLL_DISTANCE_PX
+    const val MAX_SCROLL_DISTANCE = SettingsRepository.MAX_SCROLL_DISTANCE_PX
 
     /** 旧API向けのキー入力待ち状態を変更します。 */
     fun setKeyCaptureMode(enabled: Boolean) {

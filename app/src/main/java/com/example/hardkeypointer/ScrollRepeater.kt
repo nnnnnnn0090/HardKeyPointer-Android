@@ -11,7 +11,8 @@ import android.os.Handler
 /** 方向ごとに重複しないスクロール繰り返しタスクを管理します。 */
 class ScrollRepeater(
     private val handler: Handler,
-    private val onScroll: (PointerDirection) -> Unit
+    private val onScroll: (PointerDirection) -> Unit,
+    private val intervalProvider: () -> Int = { DEFAULT_INTERVAL_MS }
 ) {
     private val tasks = mutableMapOf<PointerDirection, Runnable>()
 
@@ -22,7 +23,10 @@ class ScrollRepeater(
             /** スクロールを発行し、次回実行を予約します。 */
             override fun run() {
                 onScroll(direction)
-                handler.postDelayed(this, INTERVAL_MS)
+                val interval = intervalProvider()
+                    .coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS)
+                    .toLong()
+                handler.postDelayed(this, interval)
             }
         }
         tasks[direction] = task
@@ -40,6 +44,8 @@ class ScrollRepeater(
     }
 
     companion object {
-        private const val INTERVAL_MS = 150L
+        private const val DEFAULT_INTERVAL_MS = 150
+        private const val MIN_INTERVAL_MS = 50
+        private const val MAX_INTERVAL_MS = 500
     }
 }

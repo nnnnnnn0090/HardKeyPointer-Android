@@ -26,7 +26,7 @@ class MainActivityTest {
     fun resetPreferences() {
         KeyCaptureState.finish()
         InstrumentationRegistry.getInstrumentation().targetContext
-            .getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", 0)
+            .getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS_V2", 0)
             .edit()
             .clear()
             .commit()
@@ -50,14 +50,23 @@ class MainActivityTest {
             val moveSpeedSlider = activity.findViewById<Slider>(R.id.moveSpeedSlider)
             val moveAccelSlider = activity.findViewById<Slider>(R.id.moveAccelSlider)
             val scrollDistanceSlider = activity.findViewById<Slider>(R.id.scrollDistanceSlider)
+            val scrollSpeedSlider = activity.findViewById<Slider>(R.id.scrollSpeedSlider)
+            val zoomAmountSlider = activity.findViewById<Slider>(R.id.zoomAmountSlider)
+            val zoomDurationSlider = activity.findViewById<Slider>(R.id.zoomDurationSlider)
 
             assertNotNull(moveSpeedSlider)
             assertNotNull(moveAccelSlider)
             assertNotNull(scrollDistanceSlider)
+            assertNotNull(scrollSpeedSlider)
+            assertNotNull(zoomAmountSlider)
+            assertNotNull(zoomDurationSlider)
 
             assertEquals(30f, moveSpeedSlider.value)
             assertEquals(100f, moveAccelSlider.value)
             assertEquals(200f, scrollDistanceSlider.value)
+            assertEquals(8f, scrollSpeedSlider.value)
+            assertEquals(120f, zoomAmountSlider.value)
+            assertEquals(300f, zoomDurationSlider.value)
         }
     }
 
@@ -91,13 +100,44 @@ class MainActivityTest {
                 R.id.scrollupKeyCodeButton,
                 R.id.scrolldownKeyCodeButton,
                 R.id.scrollleftKeyCodeButton,
-                R.id.scrollrightKeyCodeButton
+                R.id.scrollrightKeyCodeButton,
+                R.id.zoomInKeyCodeButton,
+                R.id.zoomOutKeyCodeButton
             )
 
             buttonIds.forEach { id ->
                 val button = activity.findViewById<Button>(id)
                 assertNotNull("Button with id $id should exist", button)
             }
+        }
+    }
+
+    /** px指定と画面割合指定でスライダーの範囲が切り替わることを確認します。 */
+    @Test
+    fun testCoordinateModeSwitch_updatesSpatialSliders() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            val ratioButton = activity.findViewById<Button>(R.id.ratioModeButton)
+            val pixelButton = activity.findViewById<Button>(R.id.pixelModeButton)
+            val moveSpeedSlider = activity.findViewById<Slider>(R.id.moveSpeedSlider)
+            val scrollDistanceSlider = activity.findViewById<Slider>(R.id.scrollDistanceSlider)
+            val zoomAmountSlider = activity.findViewById<Slider>(R.id.zoomAmountSlider)
+
+            ratioButton.performClick()
+            assertEquals(100f, moveSpeedSlider.valueTo)
+            assertEquals(35f, moveSpeedSlider.value)
+            assertEquals(50f, scrollDistanceSlider.valueTo)
+            assertEquals(20f, scrollDistanceSlider.value)
+            assertEquals(30f, zoomAmountSlider.valueTo)
+            assertEquals(12f, zoomAmountSlider.value)
+
+            pixelButton.performClick()
+            assertEquals(100f, moveSpeedSlider.valueTo)
+            assertEquals(30f, moveSpeedSlider.value)
+            assertEquals(500f, scrollDistanceSlider.valueTo)
+            assertEquals(200f, scrollDistanceSlider.value)
+            assertEquals(300f, zoomAmountSlider.valueTo)
+            assertEquals(120f, zoomAmountSlider.value)
         }
     }
 
