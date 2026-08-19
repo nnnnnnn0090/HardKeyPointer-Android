@@ -24,7 +24,7 @@ class TapService : AccessibilityService() {
     private lateinit var pointer: PointerOverlayController
     private lateinit var gestures: GestureController
     private lateinit var movement: PointerMovementController
-    private lateinit var scrollRepeater: ScrollRepeater
+    private lateinit var scrollController: ScrollController
 
     private val handler = Handler(Looper.getMainLooper())
     private val movementHandler = Handler(Looper.getMainLooper())
@@ -42,6 +42,7 @@ class TapService : AccessibilityService() {
                 overlay = pointer,
                 scrollDistanceProvider = settings::getScrollDistance,
                 rotationProvider = ::currentRotation,
+                handler = handler,
                 dispatch = ::dispatchGestureSafely
             )
             movement = PointerMovementController(
@@ -49,7 +50,14 @@ class TapService : AccessibilityService() {
                 settingsProvider = settings::getMovementSettings,
                 move = pointer::moveBy
             )
-            scrollRepeater = ScrollRepeater(handler, gestures::scroll)
+            scrollController = ScrollController(
+                handler = handler,
+                accessibilityScroll = AccessibilityScrollController(
+                    rootProvider = { rootInActiveWindow },
+                    rotationProvider = ::currentRotation
+                ),
+                gestures = gestures
+            )
             showPointer()
         } catch (error: Exception) {
             Log.e(TAG, "Failed to initialize service", error)
@@ -188,8 +196,8 @@ class TapService : AccessibilityService() {
             else -> return
         }
         when (event.action) {
-            KeyEvent.ACTION_DOWN -> scrollRepeater.start(direction)
-            KeyEvent.ACTION_UP -> scrollRepeater.stop(direction)
+            KeyEvent.ACTION_DOWN -> scrollController.start(direction)
+            KeyEvent.ACTION_UP -> scrollController.stop(direction)
         }
     }
 
@@ -226,7 +234,7 @@ class TapService : AccessibilityService() {
 
     /** ポインタと移動・スクロールの保留処理をまとめて停止します。 */
     private fun removePointer() {
-        if (::scrollRepeater.isInitialized) scrollRepeater.stopAll()
+        if (::scrollController.isInitialized) scrollController.stopAll()
         if (::movement.isInitialized) movement.stop()
         tapStartedAt = 0L
         if (::pointer.isInitialized && pointer.hide()) {
@@ -235,11 +243,15 @@ class TapService : AccessibilityService() {
     }
 
     /** ジェスチャー実行時のサービス例外を捕捉して安全に処理します。 */
-    private fun dispatchGestureSafely(gesture: android.accessibilityservice.GestureDescription) {
+    private fun dispatchGestureSafely(
+        gesture: android.accessibilityservice.GestureDescription,
+        callback: android.accessibilityservice.AccessibilityService.GestureResultCallback?
+    ): Boolean {
         try {
-            dispatchGesture(gesture, null, null)
+            return dispatchGesture(gesture, callback, handler)
         } catch (error: Exception) {
             Log.e(TAG, "Failed to dispatch gesture", error)
+            return false
         }
     }
 
