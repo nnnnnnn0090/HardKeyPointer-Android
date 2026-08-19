@@ -2,6 +2,8 @@
 
 [Japanese version](README.md)
 
+[Privacy Policy (Japanese)](PRIVACY_POLICY.md)
+
 ![Android 7.0 or later](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
