@@ -13,13 +13,12 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.google.android.material.chip.Chip
 import com.google.android.material.slider.Slider
 
 /** キー割り当て、移動設定、サービス状態を管理する設定画面です。 */
 class MainActivity : AppCompatActivity() {
     private lateinit var settings: SettingsRepository
-    private lateinit var serviceStatusChip: Chip
+    private lateinit var serviceStatusLabel: TextView
     private lateinit var serviceStatusDetail: TextView
     private val bindingButtons = mutableMapOf<PointerAction, Button>()
     private var captureButton: Button? = null
@@ -32,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         settings = SettingsRepository(applicationContext)
         setContentView(R.layout.activity_main)
 
-        serviceStatusChip = findViewById(R.id.serviceStatusChip)
+        serviceStatusLabel = findViewById(R.id.serviceStatusLabel)
         serviceStatusDetail = findViewById(R.id.serviceStatusDetail)
         findViewById<Button>(R.id.openAccessibilitySettingsButton).setOnClickListener {
             AccessibilityUtils.openAccessibilitySettings(this)
@@ -131,7 +130,7 @@ class MainActivity : AppCompatActivity() {
     /** ユーザー補助サービスの有効状態を画面へ反映します。 */
     private fun updateServiceStatus() {
         val enabled = AccessibilityUtils.isAccessibilityServiceEnabled(this)
-        serviceStatusChip.text = getString(
+        serviceStatusLabel.text = getString(
             if (enabled) R.string.service_enabled else R.string.service_disabled
         )
         serviceStatusDetail.setText(
@@ -140,8 +139,9 @@ class MainActivity : AppCompatActivity() {
         )
         val backgroundColor = if (enabled) R.color.primary_container else R.color.error_container
         val textColor = if (enabled) R.color.on_primary_container else R.color.on_error_container
-        serviceStatusChip.setChipBackgroundColorResource(backgroundColor)
-        serviceStatusChip.setTextColor(ContextCompat.getColor(this, textColor))
+        serviceStatusLabel.backgroundTintList =
+            ContextCompat.getColorStateList(this, backgroundColor)
+        serviceStatusLabel.setTextColor(ContextCompat.getColor(this, textColor))
         findViewById<Button>(R.id.openAccessibilitySettingsButton).visibility =
             if (enabled) Button.GONE else Button.VISIBLE
     }

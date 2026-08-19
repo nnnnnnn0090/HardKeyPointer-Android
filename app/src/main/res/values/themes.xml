@@ -68,6 +68,20 @@
         <item name="android:textColor">?attr/colorOnSurface</item>
     </style>
 
+    <!-- サービス状態の表示専用ラベル。ボタンとしてフォーカスを受け取らない。 -->
+    <style name="ServiceStatusLabel">
+        <item name="android:minHeight">32dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">6dp</item>
+        <item name="android:paddingBottom">6dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:focusable">false</item>
+        <item name="android:clickable">false</item>
+    </style>
+
     <!-- Key binding button -->
     <style name="SettingKeyButton" parent="Widget.Material3.Button.OutlinedButton">
         <item name="android:layout_width">wrap_content</item>

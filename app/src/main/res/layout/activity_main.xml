@@ -50,12 +50,15 @@
                             android:text="@string/service_status_title"
                             android:textStyle="bold" />
 
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/serviceStatusChip"
-                            style="@style/Widget.Material3.Chip.Assist"
+                        <TextView
+                            android:id="@+id/serviceStatusLabel"
+                            style="@style/ServiceStatusLabel"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            app:chipStrokeWidth="0dp" />
+                            android:background="@drawable/service_status_label_background"
+                            android:clickable="false"
+                            android:focusable="false"
+                            android:importantForAccessibility="no" />
                     </LinearLayout>
 
                     <TextView

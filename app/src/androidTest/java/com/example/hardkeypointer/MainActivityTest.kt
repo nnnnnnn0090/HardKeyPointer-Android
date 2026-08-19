@@ -66,11 +66,11 @@ class MainActivityTest {
     fun testServiceStatusViewsExist() {
         val scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario.onActivity { activity ->
-            val chip = activity.findViewById<com.google.android.material.chip.Chip>(R.id.serviceStatusChip)
+            val statusLabel = activity.findViewById<TextView>(R.id.serviceStatusLabel)
             val detail = activity.findViewById<TextView>(R.id.serviceStatusDetail)
             val button = activity.findViewById<Button>(R.id.openAccessibilitySettingsButton)
 
-            assertNotNull(chip)
+            assertNotNull(statusLabel)
             assertNotNull(detail)
             assertNotNull(button)
         }
