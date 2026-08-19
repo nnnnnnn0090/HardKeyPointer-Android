@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">HardKeyPointer</string>
+    <string name="app_description">ハードキーでポインタを操作するアクセシビリティアプリです。</string>
+    <string name="developer_name">Kofune Lab / nnnnnnn0090</string>
+    <string name="app_license">MIT License</string>
     <string name="accessibility_service_description">HardKeyPointer - © 2025 @nnnnnnn0090</string>
 
     <string name="app_subtitle">ハードキーでポインタを操作</string>

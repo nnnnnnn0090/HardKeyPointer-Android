@@ -13,3 +13,5 @@ local.properties
 
 # Gradle daemon JVM (auto-generated)
 /gradle/gradle-daemon-jvm.properties
+keystore.jks
+app/release/app-release.aab

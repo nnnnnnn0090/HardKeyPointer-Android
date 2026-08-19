@@ -70,8 +70,19 @@ class TapService : AccessibilityService() {
                 intervalProvider = { settings.getZoomDuration() }
             )
             showPointer()
+            returnToAppIfRequested()
         } catch (error: Exception) {
             Log.e(TAG, "Failed to initialize service", error)
+        }
+    }
+
+    /** 設定画面からサービスを有効化した場合だけアプリへ戻します。 */
+    private fun returnToAppIfRequested() {
+        if (!AccessibilityUtils.consumeReturnToAppRequest(this)) return
+        try {
+            AccessibilityUtils.returnToMainActivity(this)
+        } catch (error: Exception) {
+            Log.w(TAG, "Failed to return to the main activity", error)
         }
     }
 

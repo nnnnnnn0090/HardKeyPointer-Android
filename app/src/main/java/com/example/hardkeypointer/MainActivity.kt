@@ -78,6 +78,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updateServiceStatus()
+        if (!AccessibilityUtils.isAccessibilityServiceEnabled(this)) {
+            AccessibilityUtils.clearReturnToAppRequest(this)
+        }
         renderSettings()
     }
 
