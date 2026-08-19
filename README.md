@@ -1,83 +1,109 @@
-# HardKeyPointer-Android
+# HardKeyPointer for Android
 
-[![Android](https://img.shields.io/badge/Android-7.0+-brightgreen.svg)](https://android.com)
-[![License](https://img.shields.io/badge/License-Custom-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Stable-success.svg)]()
+[English version](README.en.md)
 
-**HardKeyPointer**は、画面上にポインタを表示し、ハードキーを使用してポインタを操作するAndroidアプリです。タッチスクリーンなしでも、ハードキーのみで快適にデバイスを操作できます。（ガラホなど）
+![Android 7.0 or later](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-7F52FF?logo=kotlin&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-HardKeyPointer is an app that displays a pointer on the screen and allows users to control it using hardware keys. It enables smooth device operation with just hardware keys, even without a touchscreen, making it ideal for devices like feature phones.
+HardKeyPointer は、Android 端末の画面上にポインタを表示し、物理キーだけで移動・クリック・スクロール・ズームを行うためのアプリです。ガラホ、ハードウェアキーボード付き端末、タッチ操作が難しい環境での補助操作を想定しています。
 
-## 特徴
+## 主な機能
 
-### ポインタ操作
-- 画面上のポインタをハードキーで移動
-- タップ機能（短押し/長押し対応）  
-- ピンチイン/アウトによるズーム操作
-- 画面回転対応
+- 画面上のポインタを方向キーなどで移動
+- キーの長押しによる連続移動と加速度
+- 短押し・長押しに対応したタップ／クリック
+- 4方向スクロール（キーを押している間、短いジェスチャーを繰り返し送信）
+- 2本指のピンチイン／ピンチアウトによるズーム
+- 画面回転に合わせた方向補正
+- すべての操作キーを端末ごとに割り当て
+- px（ピクセル）モードと画面割合モードを切り替え
+- モードごとに設定値を完全に分離して保存
+- ポインタの表示／非表示切り替え
+- 設定の自動保存とバックグラウンド動作
 
-### キー設定
-- 移動、タップ、スクロール、ズーム機能のキー割り当て変更可能
-- Mode 1 Retro II向けデフォルト設定済み
-- デフォルトキー設定：
-  - 方向キー: ポインタ移動
-  - Enter: タップ
-  - 数字キー2,4,5,6: スクロール（上,左,下,右）
-  - 数字キー7,9: ズームアウト/ズームイン
-  - 音量ダウン: ポインタ表示/非表示
+## 初期キー割り当て
 
-### その他機能
-- 4方向スクロール
-- ピンチイン/アウト（ズーム）
-- 移動速度・加速度・スクロール速度調整
-- ズーム量・速度調整
-- 距離系設定のpx指定／画面割合指定切り替え
-- バックグラウンド動作
-- 設定自動保存
+| 操作 | 初期キー |
+| --- | --- |
+| ポインタを上・下・左・右へ移動 | 方向キー ↑ ↓ ← → |
+| タップ／クリック | Enter |
+| ポインタ表示／非表示 | 音量ダウン |
+| 上・左・下・右へスクロール | 数字キー 2・4・5・6 |
+| ズームイン／ズームアウト | 数字キー 9・7 |
 
-## 対象ユーザー
+初期値は Mode 1 Retro II のキー配置を基準にしています。設定画面で任意のキーへ変更できます。キー設定ボタンを長押しすると、その操作を未設定にできます。
 
-- ガラケー風スマートフォン（ガラホ）ユーザー
-- 身体的制約でタッチスクリーンの使用が困難な方
-- タッチスクリーンが故障したデバイスの利用者
-- 物理キーでの操作を好むユーザー
+## 動作要件
 
-## 技術仕様
+- Android 7.0（API 24）以上
+- 物理キーまたはハードウェアキーボードを備えた端末
+- HardKeyPointer のアクセシビリティサービスを有効にできること
 
-- **対応OS**: Android 7.0以上
-- **必要権限**: アクセシビリティサービス（キー入力の取得とジェスチャー実行）
-- **動作方式**: アクセシビリティサービスのオーバーレイ
-- **開発言語**: Kotlin
-- **ビルドシステム**: Gradle (Kotlin DSL)
+本アプリはキー入力の取得と画面上のジェスチャー実行に Android のアクセシビリティサービスを使用します。root 権限やインターネット権限は必要ありません。端末メーカーの制限やアプリ側の仕様により、キー入力の取得またはズーム・スクロールが利用できない場合があります。
 
-## 動作確認済みデバイス
+## インストールと初回設定
 
-- **Mode 1 Retro II** (テスト済み・デフォルト設定最適化済み)
-- その他のガラホ・フィーチャーフォン型Androidデバイス
+1. APK を端末へインストールします。
+2. **設定 → ユーザー補助（アクセシビリティ） → HardKeyPointer** を開き、サービスを有効にします。
+3. HardKeyPointer を起動し、必要に応じてキー割り当てを変更します。
+4. 初期設定では音量ダウンを押すとポインタが表示／非表示になります。
 
-> **Note**: デフォルトのキー割り当ては Mode 1 Retro II の物理キー配置に合わせて最適化されており、インストール後すぐに使用できます。他のデバイスでも設定画面からキー割り当てをカスタマイズ可能です。
+サービスが無効な場合は、アプリ画面の状態表示からアクセシビリティ設定を開けます。
 
-## インストールと設定
+## 使い方
 
-1. APKファイルをインストール
-2. 設定 → ユーザー補助 → HardKeyPointer を有効化
-3. アプリを起動してキー割り当てを調整
-4. 音量ダウンキーでポインタ表示開始
+### ポインタとクリック
 
-## 使用方法
+- 表示切り替えキーを押してポインタを表示または非表示にします。
+- 移動キーを押している間、ポインタが連続移動します。加速度を設定すると、押し続けた時間に応じて移動量が増えます。
+- タップキーを短く押すとクリック、長く押すと設定した押下時間のクリックになります。
 
-1. **ポインタ表示**: 音量ダウンキーでON/OFF切り替え
-2. **移動**: 設定したキーでポインタを移動
-3. **タップ**: Enterキー（またはカスタムキー）でタップ
-4. **スクロール**: 数字キー2,4,5,6でスクロール操作
-5. **ズーム**: 数字キー7で縮小、9で拡大（対応アプリのみ）
-6. **設定変更**: アプリ画面でキー割り当て、px指定／画面割合指定、移動速度、スクロール速度、ズーム量・速度を調整
+### スクロール
 
-## 開発状況
+スクロールキーを押している間、短いスワイプを繰り返し送信します。スクロール距離とスクロール速度を設定画面で調整できます。アプリによってはアクセシビリティジェスチャーを受け付けないため、スクロールできないことがあります。
 
-## リリースビルド
+### ズーム
 
-`assembleRelease` は R8 難読化とリソース縮小を有効にしています。署名情報を Gradle プロパティとして渡すと、そのまま署名済み APK を生成できます。
+ズームイン／ズームアウトキーを1回押すと、ポインタを中心に2本指ピンチを1回実行します。ズーム量とジェスチャー時間を調整できます。長押しによるキーリピートは抑制されるため、意図せず連続ズームすることはありません。ズームに対応していないアプリでは効果がありません。
+
+## 距離設定のモード
+
+設定画面上部のモード切り替えで、距離をどの単位で指定するか選べます。数値設定はモードごとに別々に保存されるため、切り替えてももう一方の設定は失われません。
+
+| モード | 対象 | 基準 |
+| --- | --- | --- |
+| **px** | 移動速度、スクロール距離、ズーム量 | 画面の物理ピクセル。解像度が変わると見た目の大きさも変わります。 |
+| **画面割合** | 移動速度、スクロール距離、ズーム量 | 画面に対する割合。水平移動・水平スクロールは画面幅、垂直移動・垂直スクロールは画面高、ズームは画面短辺を基準にします。 |
+
+その他の設定値もモードごとに独立して保存されます。
+
+- 移動速度: px モードは px/frame、画面割合モードは %/秒
+- 加速度: 0～500 %
+- スクロール速度: 1～10 の速度レベル
+- ズーム速度: ジェスチャー時間（100～1000 ms）
+
+解像度や画面サイズが異なる端末で同じ操作感を保ちたい場合は、画面割合モードを使用してください。固定ピクセル単位で細かく調整したい場合は px モードが適しています。
+
+## ビルド
+
+### 必要な環境
+
+- Android Studio の最新安定版、または Android SDK
+- Android SDK Platform 35
+- JDK 17
+
+### デバッグ APK
+
+```bash
+./gradlew assembleDebug
+```
+
+生成物は `app/build/outputs/apk/debug/app-debug.apk` です。
+
+### リリース APK
+
+リリースビルドは R8 難読化とリソース縮小を有効にしています。署名情報を Gradle プロパティで渡すと、署名済み APK を生成できます。
 
 ```bash
 ./gradlew assembleRelease \
@@ -87,42 +113,35 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
   -PRELEASE_KEY_PASSWORD='***'
 ```
 
-署名情報を渡さない場合は `app/build/outputs/apk/release/app-release-unsigned.apk` が生成されます。
+署名情報を渡さない場合は、`app/build/outputs/apk/release/app-release-unsigned.apk` が生成されます。
 
-### 完了済み機能
-- ~~ハードキーでのスクロールサポート~~
-- ~~画面回転対応~~
-- ~~ポインタ加速度機能~~
-- ~~カスタムキー割り当て~~
-- ~~移動速度調整~~
-- ~~ピンチイン/アウト（ズーム）操作~~
+## テスト
 
-### 今後の開発予定
-- [ ] より多くのデバイスでの動作確認
-- [ ] ジェスチャー操作の追加
+```bash
+./gradlew testDebugUnitTest lintDebug
+./gradlew connectedDebugAndroidTest
+```
+
+`connectedDebugAndroidTest` は USB 接続または ADB 接続された Android 端末が必要です。
+
+## プロジェクト構成
+
+- `app/src/main/java/.../MainActivity.kt`: 設定画面とキー割り当て
+- `app/src/main/java/.../TapService.kt`: アクセシビリティサービスとキー入力処理
+- `app/src/main/java/.../PointerMovementController.kt`: ポインタ移動と加速度
+- `app/src/main/java/.../GestureController.kt`: タップ、スクロール、ピンチジェスチャー
+- `app/src/main/java/.../SettingsRepository.kt`: 設定の保存とモード別管理
+
+## デモ
+
+[デモ動画を見る](https://github.com/user-attachments/assets/4d60c6fc-2446-4d48-9427-d80d26312bea)
 
 ## ライセンス
 
-このアプリは組み込み（プリインストール）での使用も許可されています。  
-詳細は[LICENSE](LICENSE)ファイルをご確認ください。
+MIT License。詳細は [LICENSE](LICENSE) を参照してください。
 
-## 貢献
+Copyright (c) 2024-2026 nnnnnnn0090
 
-バグレポートや機能要求は、GitHubのIssuesでお知らせください。  
-プルリクエストも歓迎いたします。
+## 貢献・問い合わせ
 
-## サポート
-
-- **バグレポート**: GitHubのIssuesページ
-- **機能要求**: GitHubのIssuesページ
-- **その他のお問い合わせ**: プロジェクトページ経由
-
----
-
-## デモ動画
-
-https://github.com/user-attachments/assets/4d60c6fc-2446-4d48-9427-d80d26312bea
-
----
-
-#Hardware Keyboard #Hardware Button #Pointer #Cursor #Accessibility #Garakei #Garaho #Android #FeaturePhone
+バグ報告、機能提案、プルリクエストは GitHub の Issues / Pull Requests からお寄せください。再現手順、端末名、Android バージョン、設定内容があると調査が容易になります。
