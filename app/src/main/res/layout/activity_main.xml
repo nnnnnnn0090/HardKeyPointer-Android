@@ -1,246 +1,357 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="16dp"
-    android:paddingRight="16dp">
+    android:orientation="vertical">
 
-    <!-- Title Text -->
-    <TextView
-        android:id="@+id/titleTextView"
+    <!-- App bar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/key_settings"
-        android:textSize="24sp"
-        android:paddingTop="13dp"
-        android:paddingBottom="13dp"
-        android:gravity="center" />
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:title="@string/app_name"
+        app:titleCentered="true"
+        app:titleTextColor="?attr/colorOnSurface" />
 
-    <!-- ScrollView containing the key settings -->
     <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/scrollView">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="24dp">
 
-            <!-- Up Movement Key Code -->
-            <TextView
-                android:id="@+id/upKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/up_move_key_code"
-                android:textSize="16sp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/upKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+            <!-- Service status -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
 
-            <!-- Down Movement Key Code -->
-            <TextView
-                android:id="@+id/downKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/down_move_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/downKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <!-- Left Movement Key Code -->
-            <TextView
-                android:id="@+id/leftKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/left_move_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/leftKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
 
-            <!-- Right Movement Key Code -->
-            <TextView
-                android:id="@+id/rightKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/right_move_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/rightKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/service_status_title"
+                            android:textStyle="bold" />
 
-            <!-- Tap Key Code -->
-            <TextView
-                android:id="@+id/tapKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/tap_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/tapKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/serviceStatusChip"
+                            style="@style/Widget.Material3.Chip.Assist"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:chipStrokeWidth="0dp" />
+                    </LinearLayout>
 
-            <!-- Move Speed -->
-            <TextView
-                android:id="@+id/moveSpeedLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/move_speed"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <EditText
-                android:id="@+id/moveSpeedEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="@string/enter_speed_hint"
-                android:textSize="16sp"
-                android:layout_marginBottom="10dp" />
+                    <TextView
+                        android:id="@+id/serviceStatusDetail"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textSize="14sp"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
-            <!-- Move Acceleration -->
-            <TextView
-                android:id="@+id/moveAccelLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/move_accel"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <EditText
-                android:id="@+id/moveAccelEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="@string/enter_accel_hint"
-                android:textSize="16sp"
-                android:layout_marginBottom="10dp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/openAccessibilitySettingsButton"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/open_accessibility_settings" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <!-- Scroll Distance -->
-            <TextView
-                android:id="@+id/scrollDistanceLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/scroll_distance"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <EditText
-                android:id="@+id/scrollDistanceEditText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="@string/enter_scroll_distance_hint"
-                android:textSize="16sp"
-                android:layout_marginBottom="10dp" />
+            <!-- Pointer movement -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
 
-            <!-- Scroll Up -->
-            <TextView
-                android:id="@+id/scrollupKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/scroll_up"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/scrollupKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <!-- Scroll Down -->
-            <TextView
-                android:id="@+id/scrolldownKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/scroll_down"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/scrolldownKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                    <TextView
+                        style="@style/SectionHeader"
+                        android:text="@string/section_pointer" />
 
-            <!-- Scroll Left -->
-            <TextView
-                android:id="@+id/scrollleftKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/scroll_left"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/scrollleftKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                    <!-- Up -->
+                    <LinearLayout style="@style/SettingRow">
 
-            <!-- Scroll Right -->
-            <TextView
-                android:id="@+id/scrollrightKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/scroll_right"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/scrollrightKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                        <TextView
+                            android:id="@+id/upKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/up_move_key_code" />
 
-            <!-- Disable Key Code -->
-            <TextView
-                android:id="@+id/disableKeyCodeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/disable_key_code"
-                android:textSize="16sp"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-            <Button
-                android:id="@+id/disableKeyCodeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/set_button" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/upKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
 
-            <!-- License Button -->
-            <Button
+                    <!-- Down -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/downKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/down_move_key_code" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/downKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Left -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/leftKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/left_move_key_code" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/leftKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Right -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/rightKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/right_move_key_code" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/rightKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Tap -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/tapKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/tap_key_code" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/tapKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Scroll -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/SectionHeader"
+                        android:text="@string/section_scroll" />
+
+                    <!-- Scroll up -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/scrollupKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_up" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/scrollupKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Scroll down -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/scrolldownKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_down" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/scrolldownKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Scroll left -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/scrollleftKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_left" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/scrollleftKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+
+                    <!-- Scroll right -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/scrollrightKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_right" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/scrollrightKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Pointer toggle -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/SectionHeader"
+                        android:text="@string/section_toggle" />
+
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            android:id="@+id/disableKeyCodeLabel"
+                            style="@style/SettingLabel"
+                            android:text="@string/disable_key_code" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/disableKeyCodeButton"
+                            style="@style/SettingKeyButton"
+                            android:text="@string/set_button" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Settings -->
+            <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        style="@style/SectionHeader"
+                        android:text="@string/section_settings" />
+
+                    <!-- Move speed -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/move_speed" />
+
+                        <TextView
+                            android:id="@+id/moveSpeedValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/moveSpeedSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="5"
+                        android:valueTo="100"
+                        android:stepSize="1"
+                        android:value="30" />
+
+                    <!-- Move acceleration -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/move_accel" />
+
+                        <TextView
+                            android:id="@+id/moveAccelValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/moveAccelSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="0"
+                        android:valueTo="500"
+                        android:stepSize="10"
+                        android:value="100" />
+
+                    <!-- Scroll distance -->
+                    <LinearLayout style="@style/SettingRow">
+
+                        <TextView
+                            style="@style/SettingLabel"
+                            android:text="@string/scroll_distance" />
+
+                        <TextView
+                            android:id="@+id/scrollDistanceValue"
+                            style="@style/SettingValue" />
+                    </LinearLayout>
+
+                    <com.google.android.material.slider.Slider
+                        android:id="@+id/scrollDistanceSlider"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:valueFrom="50"
+                        android:valueTo="500"
+                        android:stepSize="10"
+                        android:value="200" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- License -->
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/license_button"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/license_button"
+                android:layout_gravity="center_horizontal"
                 android:layout_marginTop="16dp"
-                android:layout_centerInParent="true" />
+                android:text="@string/license_button"
+                android:textColor="?attr/colorPrimary" />
 
-            <!-- Credit Text -->
             <TextView
                 android:id="@+id/creditTextView"
                 android:layout_width="match_parent"
@@ -248,11 +359,9 @@
                 android:text="@string/credit"
                 android:textSize="12sp"
                 android:gravity="center"
-                android:layout_marginTop="16dp"
-                android:textColor="#808080"
+                android:layout_marginTop="8dp"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 android:paddingBottom="10dp" />
-
         </LinearLayout>
     </ScrollView>
-
 </LinearLayout>

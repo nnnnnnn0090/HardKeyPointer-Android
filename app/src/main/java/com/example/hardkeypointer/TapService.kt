@@ -1,356 +1,272 @@
+/*
+ * HardKeyPointer-Android
+ * Copyright (c) 2024-2026 nnnnnnn0090
+ * 作者: nnnnnnn0090
+ * ライセンス: リポジトリの LICENSE を参照してください。
+ */
 package com.nnnnnnn0090.hardkeypointer
 
 import android.accessibilityservice.AccessibilityService
-import android.accessibilityservice.GestureDescription
-import android.accessibilityservice.GestureDescription.StrokeDescription
-import android.graphics.Path
-import android.graphics.PixelFormat
+import android.hardware.display.DisplayManager
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Display
 import android.view.KeyEvent
-import android.view.LayoutInflater
 import android.view.Surface
-import android.view.View
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
-import androidx.core.view.doOnLayout
 
+/** フィルタしたハードキー入力をポインタ操作へ変換する入口です。 */
 class TapService : AccessibilityService() {
-    private lateinit var windowManager: WindowManager
-    private var pointerView: View? = null
+    private lateinit var settings: SettingsRepository
+    private lateinit var pointer: PointerOverlayController
+    private lateinit var gestures: GestureController
+    private lateinit var movement: PointerMovementController
+    private lateinit var scrollRepeater: ScrollRepeater
+
     private val handler = Handler(Looper.getMainLooper())
     private val movementHandler = Handler(Looper.getMainLooper())
-    private val scrollRunnables = mutableMapOf<String, Runnable?>()
+    private val capturedKeys = mutableSetOf<Int>()
+    private var tapStartedAt = 0L
+    private var backActionInProgress = false
 
-    private var pointerXPosition = 100
-    private var pointerYPosition = 100
-    private var moveSpeed = 10
-    private var moveAccel = 100
-
-    private var keyPressStartTime: Long = 0
-    private var isMoving = false
-    private var movementStartTime: Long = 0
-    private var pointerWidth = 0
-    private var pointerHeight = 0
-
+    /** サービス接続時に設定、オーバーレイ、入力制御を初期化します。 */
     override fun onServiceConnected() {
         try {
-            windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            settings = SettingsRepository(applicationContext)
+            val windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
+            pointer = PointerOverlayController(this, windowManager)
+            gestures = GestureController(
+                overlay = pointer,
+                scrollDistanceProvider = settings::getScrollDistance,
+                rotationProvider = ::currentRotation,
+                dispatch = ::dispatchGestureSafely
+            )
+            movement = PointerMovementController(
+                handler = movementHandler,
+                settingsProvider = settings::getMovementSettings,
+                move = pointer::moveBy
+            )
+            scrollRepeater = ScrollRepeater(handler, gestures::scroll)
             showPointer()
-        } catch (e: Exception) {
-            Log.e("TapService", "Failed to initialize service", e)
+        } catch (error: Exception) {
+            Log.e(TAG, "Failed to initialize service", error)
         }
     }
 
-    private fun getKeyCodes(): Map<String, Int> {
-        moveSpeed = SettingsManager.getMoveSpeed(this)
-        moveAccel = SettingsManager.getMoveAccel(this)
-        return SettingsManager.getAllKeyCodes(this)
-    }
-
-    private fun getPointerCoordinates(): Pair<Float, Float>? {
-        pointerView?.let {
-            val location = IntArray(2)
-            it.getLocationOnScreen(location)
-            return Pair(location[0].toFloat(), location[1].toFloat())
-        }
-        return null
-    }
-
-    private fun getRotatedDirection(direction: String, rotation: Int): String {
-        return when (rotation) {
-            Surface.ROTATION_90 -> when (direction) {
-                "up" -> "left"
-                "left" -> "down"
-                "down" -> "right"
-                "right" -> "up"
-                else -> direction
-            }
-            Surface.ROTATION_180 -> when (direction) {
-                "up" -> "down"
-                "left" -> "right"
-                "down" -> "up"
-                "right" -> "left"
-                else -> direction
-            }
-            Surface.ROTATION_270 -> when (direction) {
-                "up" -> "right"
-                "right" -> "down"
-                "down" -> "left"
-                "left" -> "up"
-                else -> direction
-            }
-            else -> direction
-        }
-    }
-
-    private fun simulateScroll(direction: String) {
-        getPointerCoordinates()?.let { (x, y) ->
-            val displayMetrics = resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val screenHeight = displayMetrics.heightPixels
-            
-            if (x < 0 || x >= screenWidth || y < 0 || y >= screenHeight) {
-                return
-            }
-            
-            val rotation = windowManager.defaultDisplay.rotation
-            val rotatedDirection = getRotatedDirection(direction, rotation)
-            val scrollDistance = SettingsManager.getScrollDistance(this)
-            val (dx, dy) = when (rotatedDirection) {
-                "up" -> Pair(0, -scrollDistance)
-                "down" -> Pair(0, scrollDistance)
-                "left" -> Pair(-scrollDistance, 0)
-                "right" -> Pair(scrollDistance, 0)
-                else -> return
-            }
-            
-            val endX = (x + dx).coerceIn(0f, screenWidth.toFloat())
-            val endY = (y + dy).coerceIn(0f, screenHeight.toFloat())
-            
-            val path = Path().apply {
-                moveTo(x, y)
-                lineTo(endX, endY)
-            }
-            val gesture = GestureDescription.Builder()
-                .addStroke(StrokeDescription(path, 0, 150))
-                .build()
-            try {
-                dispatchGesture(gesture, null, null)
-            } catch (e: Exception) {
-                Log.e("TapService", "Failed to dispatch scroll gesture", e)
-            }
-        }
-    }
-
-    private fun startScrolling(scrollAction: (String) -> Unit, direction: String) {
-        if (scrollRunnables[direction] != null) return
-
-        val newRunnable = object : Runnable {
-            override fun run() {
-                scrollAction(direction)
-                handler.postDelayed(this, 150)
-            }
-        }
-        scrollRunnables[direction] = newRunnable
-        handler.post(newRunnable)
-    }
-
-    private fun stopScrolling(direction: String) {
-        scrollRunnables[direction]?.let {
-            handler.removeCallbacks(it)
-            scrollRunnables[direction] = null
-        }
-    }
-
-    private fun stopAllScrolling() {
-        scrollRunnables.keys.forEach { direction ->
-            stopScrolling(direction)
-        }
-    }
-
+    /** フィルタされたキーイベントを対応するポインタ操作へ振り分けます。 */
     override fun onKeyEvent(event: KeyEvent?): Boolean {
+        val keyEvent = event ?: return false
         return try {
-            event?.let {
-                val keyCodes = getKeyCodes()
-                if (pointerView != null) {
-                    when (it.keyCode) {
-                        keyCodes["up"], keyCodes["down"], keyCodes["left"], keyCodes["right"], keyCodes["tap"] -> {
-                            when (it.action) {
-                                KeyEvent.ACTION_DOWN -> handleKeyDown(it, keyCodes)
-                                KeyEvent.ACTION_UP -> handleKeyUp(it, keyCodes)
-                            }
-                            return@let true
-                        }
-                        keyCodes["scrollup"], keyCodes["scrolldown"], keyCodes["scrollleft"], keyCodes["scrollright"] -> {
-                            val direction = when (it.keyCode) {
-                                keyCodes["scrollup"] -> "up"
-                                keyCodes["scrolldown"] -> "down"
-                                keyCodes["scrollleft"] -> "left"
-                                keyCodes["scrollright"] -> "right"
-                                else -> return@let false
-                            }
-                            handleScrollKey(it, direction)
-                            return@let true
-                        }
-                    }
-                }
-                if (it.keyCode == keyCodes["disable"] && it.action == KeyEvent.ACTION_DOWN) {
-                    if (pointerView == null) showPointer() else removePointer()
-                }
+            if (handleKeyCaptureEvent(keyEvent)) return true
+            if (!::settings.isInitialized) return false
+
+            val keyCodes = settings.getKeyCodes()
+            if (!pointer.isVisible) return handleHiddenPointerKey(keyEvent, keyCodes)
+
+            pointer.refreshBounds()
+            if (isToggleKey(keyEvent, keyCodes)) {
+                removePointer()
+                return true
             }
-            false
-        } catch (e: Exception) {
-            Log.e("TapService", "Error handling key event", e)
+
+            when {
+                isMovementOrTapKey(keyEvent, keyCodes) -> {
+                    handleMovementOrTap(keyEvent, keyCodes)
+                    true
+                }
+                isScrollKey(keyEvent, keyCodes) -> {
+                    handleScroll(keyEvent, keyCodes)
+                    true
+                }
+                keyEvent.keyCode == KeyEvent.KEYCODE_BACK -> handleBack(keyEvent)
+                else -> false
+            }
+        } catch (error: Exception) {
+            Log.e(TAG, "Error handling key event", error)
             false
         }
     }
 
-    private fun handleScrollKey(event: KeyEvent, direction: String) {
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> startScrolling(::simulateScroll, direction)
-            KeyEvent.ACTION_UP -> stopScrolling(direction)
+    /** 設定画面で選択中のキーを記録し、設定直後の誤動作を防ぎます。 */
+    private fun handleKeyCaptureEvent(event: KeyEvent): Boolean {
+        if (KeyCaptureState.isActive) {
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> capturedKeys.add(event.keyCode)
+                KeyEvent.ACTION_UP -> capturedKeys.remove(event.keyCode)
+            }
+            // false を返して MainActivity にキーを渡します。同時にキーを記録し、
+            // リピート入力が設定直後の操作を実行しないようにします。
+            return false
         }
+        if (event.keyCode !in capturedKeys) return false
+        if (event.action == KeyEvent.ACTION_UP) capturedKeys.remove(event.keyCode)
+        return true
     }
 
-    private fun handleKeyDown(event: KeyEvent, keyCodes: Map<String, Int>) {
-        val direction = when (event.keyCode) {
-            keyCodes["up"] -> "up"
-            keyCodes["down"] -> "down"
-            keyCodes["left"] -> "left"
-            keyCodes["right"] -> "right"
-            else -> null
+    /** ポインタ非表示中は表示切替キーだけを処理します。 */
+    private fun handleHiddenPointerKey(
+        event: KeyEvent,
+        keyCodes: Map<PointerAction, Int>
+    ): Boolean {
+        if (event.keyCode == keyCodes.getValue(PointerAction.TOGGLE) &&
+            event.action == KeyEvent.ACTION_DOWN
+        ) {
+            showPointer()
+            return true
         }
+        return false
+    }
 
+    /** イベントがポインタ表示切替キーの押下か判定します。 */
+    private fun isToggleKey(event: KeyEvent, keyCodes: Map<PointerAction, Int>): Boolean =
+        event.keyCode == keyCodes.getValue(PointerAction.TOGGLE) &&
+            event.action == KeyEvent.ACTION_DOWN
+
+    /** イベントが移動またはタップ操作のキーか判定します。 */
+    private fun isMovementOrTapKey(
+        event: KeyEvent,
+        keyCodes: Map<PointerAction, Int>
+    ): Boolean =
+        event.keyCode == keyCodes.getValue(PointerAction.UP) ||
+            event.keyCode == keyCodes.getValue(PointerAction.DOWN) ||
+            event.keyCode == keyCodes.getValue(PointerAction.LEFT) ||
+            event.keyCode == keyCodes.getValue(PointerAction.RIGHT) ||
+            event.keyCode == keyCodes.getValue(PointerAction.TAP)
+
+    /** イベントがいずれかのスクロール操作キーか判定します。 */
+    private fun isScrollKey(
+        event: KeyEvent,
+        keyCodes: Map<PointerAction, Int>
+    ): Boolean =
+        event.keyCode == keyCodes.getValue(PointerAction.SCROLL_UP) ||
+            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_DOWN) ||
+            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_LEFT) ||
+            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_RIGHT)
+
+    /** 移動キーの押下・解放とタップの押下時間を処理します。 */
+    private fun handleMovementOrTap(
+        event: KeyEvent,
+        keyCodes: Map<PointerAction, Int>
+    ) {
+        val direction = movementDirection(event.keyCode, keyCodes)
         if (direction != null) {
-            val rotation = windowManager.defaultDisplay.rotation
-            val rotatedDirection = getRotatedDirection(direction, rotation)
-            when (rotatedDirection) {
-                "up" -> movePointer(0, -1)
-                "down" -> movePointer(0, 1)
-                "left" -> movePointer(-1, 0)
-                "right" -> movePointer(1, 0)
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> {
+                    val rotated = direction.rotated(currentRotation())
+                    movement.start(rotated.dx, rotated.dy)
+                }
+                KeyEvent.ACTION_UP -> movement.stop()
             }
-        } else if (event.keyCode == keyCodes["tap"]) {
-            keyPressStartTime = System.currentTimeMillis()
+            return
         }
-    }
 
-    private fun handleKeyUp(event: KeyEvent, keyCodes: Map<String, Int>) {
-        if (event.keyCode == keyCodes["tap"]) {
-            val pressDuration = System.currentTimeMillis() - keyPressStartTime
-            simulatePressAtPointer(pressDuration)
-        }
-        stopPointerMovement()
-    }
-
-    private fun movePointer(dx: Int, dy: Int) {
-        if (!isMoving) {
-            isMoving = true
-            movementStartTime = System.currentTimeMillis()
-        }
-        
-        movementHandler.post(object : Runnable {
-            override fun run() {
-                if (!isMoving) return
-                
-                val elapsed = System.currentTimeMillis() - movementStartTime
-                val accel = if (moveAccel > 0) 1.0 + (elapsed * moveAccel / 10000.0) else 1.0
-                
-                val newX = pointerXPosition + (dx * moveSpeed * accel * 0.2).toInt()
-                val newY = pointerYPosition + (dy * moveSpeed * accel * 0.2).toInt()
-                
-                val displayMetrics = resources.displayMetrics
-                val screenWidth = displayMetrics.widthPixels
-                val screenHeight = displayMetrics.heightPixels
-                val halfPointerWidth = pointerWidth / 2
-                val halfPointerHeight = pointerHeight / 2
-                
-                pointerXPosition = newX.coerceIn(-halfPointerWidth, screenWidth - halfPointerWidth)
-                pointerYPosition = newY.coerceIn(-halfPointerHeight, screenHeight - halfPointerHeight)
-                
-                updatePointerPosition()
-                
-                movementHandler.postDelayed(this, 16)
+        if (event.keyCode == keyCodes.getValue(PointerAction.TAP)) {
+            when (event.action) {
+                KeyEvent.ACTION_DOWN -> if (tapStartedAt == 0L) {
+                    tapStartedAt = System.currentTimeMillis()
+                }
+                KeyEvent.ACTION_UP -> {
+                    if (tapStartedAt != 0L) {
+                        gestures.tap(System.currentTimeMillis() - tapStartedAt)
+                    }
+                    tapStartedAt = 0L
+                }
             }
-        })
+        }
     }
 
-    private fun stopPointerMovement() {
-        isMoving = false
-        movementHandler.removeCallbacksAndMessages(null)
+    /** スクロール方向の繰り返し開始・停止を処理します。 */
+    private fun handleScroll(event: KeyEvent, keyCodes: Map<PointerAction, Int>) {
+        val direction = when (event.keyCode) {
+            keyCodes.getValue(PointerAction.SCROLL_UP) -> PointerDirection.UP
+            keyCodes.getValue(PointerAction.SCROLL_DOWN) -> PointerDirection.DOWN
+            keyCodes.getValue(PointerAction.SCROLL_LEFT) -> PointerDirection.LEFT
+            keyCodes.getValue(PointerAction.SCROLL_RIGHT) -> PointerDirection.RIGHT
+            else -> return
+        }
+        when (event.action) {
+            KeyEvent.ACTION_DOWN -> scrollRepeater.start(direction)
+            KeyEvent.ACTION_UP -> scrollRepeater.stop(direction)
+        }
     }
 
+    /** キーコードを画面回転前の論理移動方向へ変換します。 */
+    private fun movementDirection(
+        keyCode: Int,
+        keyCodes: Map<PointerAction, Int>
+    ): PointerDirection? = when (keyCode) {
+        keyCodes.getValue(PointerAction.UP) -> PointerDirection.UP
+        keyCodes.getValue(PointerAction.DOWN) -> PointerDirection.DOWN
+        keyCodes.getValue(PointerAction.LEFT) -> PointerDirection.LEFT
+        keyCodes.getValue(PointerAction.RIGHT) -> PointerDirection.RIGHT
+        else -> null
+    }
+
+    /** 戻るキーをデバウンスし、システムの戻る操作を実行します。 */
+    private fun handleBack(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && !backActionInProgress) {
+            backActionInProgress = true
+            try {
+                performGlobalAction(GLOBAL_ACTION_BACK)
+            } catch (error: Exception) {
+                Log.e(TAG, "Failed to perform global back action", error)
+            }
+            handler.postDelayed({ backActionInProgress = false }, BACK_DEBOUNCE_MS)
+        }
+        return true
+    }
+
+    /** ポインタを表示し、表示成功時だけ通知を出します。 */
     private fun showPointer() {
-        if (pointerView == null) {
-            try {
-                pointerView = LayoutInflater.from(this).inflate(R.layout.pointer_view, null)
-                
-                pointerView?.doOnLayout {
-                    pointerWidth = it.width
-                    pointerHeight = it.height
-                }
-                
-                val params = WindowManager.LayoutParams(
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.WRAP_CONTENT,
-                    WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or 
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or 
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-                    PixelFormat.TRANSLUCENT
-                ).apply {
-                    x = pointerXPosition
-                    y = pointerYPosition
-                }
-                windowManager.addView(pointerView, params)
-                Toast.makeText(this, getString(R.string.pointer_shown), Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.e("TapService", "Failed to show pointer", e)
-                pointerView = null
-            }
-        }
+        if (pointer.show()) Toast.makeText(this, R.string.pointer_shown, Toast.LENGTH_SHORT).show()
     }
 
-    private fun updatePointerPosition() {
-        pointerView?.let {
-            try {
-                val params = it.layoutParams as WindowManager.LayoutParams
-                params.x = pointerXPosition
-                params.y = pointerYPosition
-                windowManager.updateViewLayout(it, params)
-            } catch (e: Exception) {
-                Log.e("TapService", "Failed to update pointer position", e)
-            }
-        }
-    }
-
-    private fun simulatePressAtPointer(pressDuration: Long) {
-        getPointerCoordinates()?.let { (x, y) ->
-            val displayMetrics = resources.displayMetrics
-            val screenWidth = displayMetrics.widthPixels
-            val screenHeight = displayMetrics.heightPixels
-            
-            if (x < 0 || x >= screenWidth || y < 0 || y >= screenHeight) {
-                return
-            }
-            
-            val path = Path().apply { moveTo(x, y) }
-            val gesture = GestureDescription.Builder()
-                .addStroke(StrokeDescription(path, 0, pressDuration))
-                .build()
-            try {
-                dispatchGesture(gesture, null, null)
-            } catch (e: Exception) {
-                Log.e("TapService", "Failed to dispatch tap gesture", e)
-            }
-        }
-    }
-
-    override fun onAccessibilityEvent(event: AccessibilityEvent) {}
-
-    override fun onInterrupt() {
-        stopAllScrolling()
-        removePointer()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopAllScrolling()
-        removePointer()
-    }
-
+    /** ポインタと移動・スクロールの保留処理をまとめて停止します。 */
     private fun removePointer() {
-        pointerView?.let {
-            try {
-                windowManager.removeView(it)
-            } catch (e: Exception) {
-                Log.e("TapService", "Failed to remove pointer", e)
-            }
-            pointerView = null
-            Toast.makeText(this, getString(R.string.pointer_removed), Toast.LENGTH_SHORT).show()
+        if (::scrollRepeater.isInitialized) scrollRepeater.stopAll()
+        if (::movement.isInitialized) movement.stop()
+        tapStartedAt = 0L
+        if (::pointer.isInitialized && pointer.hide()) {
+            Toast.makeText(this, R.string.pointer_removed, Toast.LENGTH_SHORT).show()
         }
+    }
+
+    /** ジェスチャー実行時のサービス例外を捕捉して安全に処理します。 */
+    private fun dispatchGestureSafely(gesture: android.accessibilityservice.GestureDescription) {
+        try {
+            dispatchGesture(gesture, null, null)
+        } catch (error: Exception) {
+            Log.e(TAG, "Failed to dispatch gesture", error)
+        }
+    }
+
+    /** 現在のメインディスプレイ回転を取得します。 */
+    private fun currentRotation(): Int = getSystemService(DisplayManager::class.java)
+        ?.getDisplay(Display.DEFAULT_DISPLAY)?.rotation ?: Surface.ROTATION_0
+
+    /** アクセシビリティイベント自体は利用しないため何もしません。 */
+    override fun onAccessibilityEvent(event: AccessibilityEvent) = Unit
+
+    /** サービス中断時に入力記録とポインタを解放します。 */
+    override fun onInterrupt() {
+        capturedKeys.clear()
+        if (::pointer.isInitialized) removePointer()
+    }
+
+    /** サービス破棄時に全コールバック、入力状態、オーバーレイを解放します。 */
+    override fun onDestroy() {
+        capturedKeys.clear()
+        if (::pointer.isInitialized) removePointer()
+        handler.removeCallbacksAndMessages(null)
+        movementHandler.removeCallbacksAndMessages(null)
+        super.onDestroy()
+    }
+
+    companion object {
+        private const val TAG = "TapService"
+        private const val BACK_DEBOUNCE_MS = 300L
     }
 }

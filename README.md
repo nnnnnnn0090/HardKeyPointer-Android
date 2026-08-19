@@ -1,6 +1,6 @@
 # HardKeyPointer-Android
 
-[![Android](https://img.shields.io/badge/Android-6.0+-brightgreen.svg)](https://android.com)
+[![Android](https://img.shields.io/badge/Android-7.0+-brightgreen.svg)](https://android.com)
 [![License](https://img.shields.io/badge/License-Custom-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Stable-success.svg)]()
 
@@ -39,9 +39,9 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 
 ## 技術仕様
 
-- **対応OS**: Android 6.0以上
-- **必要権限**: アクセシビリティサービス、システムアラートウィンドウ、フォアグラウンドサービス
-- **動作方式**: フォアグラウンドサービス + アクセシビリティサービス
+- **対応OS**: Android 7.0以上
+- **必要権限**: アクセシビリティサービス（キー入力の取得とジェスチャー実行）
+- **動作方式**: アクセシビリティサービスのオーバーレイ
 - **開発言語**: Kotlin
 - **ビルドシステム**: Gradle (Kotlin DSL)
 
@@ -68,6 +68,20 @@ HardKeyPointer is an app that displays a pointer on the screen and allows users 
 5. **設定変更**: アプリ画面でキー割り当てや速度を調整
 
 ## 開発状況
+
+## リリースビルド
+
+`assembleRelease` は R8 難読化とリソース縮小を有効にしています。署名情報を Gradle プロパティとして渡すと、そのまま署名済み APK を生成できます。
+
+```bash
+./gradlew assembleRelease \
+  -PRELEASE_STORE_FILE=/path/to/release.jks \
+  -PRELEASE_STORE_PASSWORD='***' \
+  -PRELEASE_KEY_ALIAS='hardkeypointer' \
+  -PRELEASE_KEY_PASSWORD='***'
+```
+
+署名情報を渡さない場合は `app/build/outputs/apk/release/app-release-unsigned.apk` が生成されます。
 
 ### 完了済み機能
 - ~~ハードキーでのスクロールサポート~~

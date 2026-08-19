@@ -2,6 +2,20 @@
     <string name="app_name">HardKeyPointer</string>
     <string name="accessibility_service_description">HardKeyPointer - © 2025 @nnnnnnn0090</string>
 
+    <string name="app_subtitle">ハードキーでポインタを操作</string>
+
+    <string name="service_status_title">アクセシビリティサービス</string>
+    <string name="service_enabled">有効</string>
+    <string name="service_disabled">無効</string>
+    <string name="service_status_enabled_detail">HardKeyPointer を使用できます。</string>
+    <string name="service_status_disabled_detail">アクセシビリティ設定で HardKeyPointer を有効にしてください。</string>
+    <string name="open_accessibility_settings">アクセシビリティ設定を開く</string>
+
+    <string name="section_pointer">ポインタ移動</string>
+    <string name="section_scroll">スクロール</string>
+    <string name="section_toggle">ポインタ表示切り替え</string>
+    <string name="section_settings">設定</string>
+
     <string name="key_settings">キー設定</string>
     <string name="up_move_key_code">上移動</string>
     <string name="down_move_key_code">下移動</string>
@@ -16,12 +30,13 @@
     <string name="disable_key_code">ポインタ表示/非表示</string>
     <string name="set_button">設定</string>
     <string name="license_button">ライセンス</string>
-    <string name="credit">© 2024 @nnnnnnn0090</string>
+    <string name="credit">© 2026 Hizuru Lab / nnnnnnn0090</string>
     <string name="enter_speed_hint">移動速度</string>
     <string name="move_speed_saved">速度を保存しました</string>
-    <string name="not_set">無効</string>
-    <string name="waiting_for_key_input">キー入力待ち...</string>
+    <string name="not_set">未設定</string>
+    <string name="waiting_for_key_input">キー入力待ち…</string>
     <string name="key_code_set">キー設定: %1$d</string>
+    <string name="key_already_assigned">このキーは別の操作に割り当て済みです。</string>
     <string name="pointer_shown">ポインタ表示</string>
     <string name="pointer_removed">ポインタ非表示</string>
     <string name="move_accel">加速度</string>
@@ -30,4 +45,6 @@
     <string name="scroll_distance">スクロール距離</string>
     <string name="enter_scroll_distance_hint">スクロール距離（ピクセル）</string>
     <string name="scroll_distance_saved">スクロール距離を保存しました</string>
+    <string name="value_px">%1$d px</string>
+    <string name="value_percent">%1$d%%</string>
 </resources>

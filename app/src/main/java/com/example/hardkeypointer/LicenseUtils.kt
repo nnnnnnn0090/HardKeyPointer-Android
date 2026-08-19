@@ -1,14 +1,22 @@
+/*
+ * HardKeyPointer-Android
+ * Copyright (c) 2024-2026 nnnnnnn0090
+ * 作者: nnnnnnn0090
+ * ライセンス: リポジトリの LICENSE を参照してください。
+ */
 package com.nnnnnnn0090.hardkeypointer
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 
+/** アプリに同梱したライセンス表示を開きます。 */
 object LicenseUtils {
+    /** MITライセンス本文をダイアログで表示します。 */
     fun showLicenseDialog(context: Context) {
         val licenseText = """
             MIT License
 
-            Copyright (c) 2024 nnnnnnn0090
+            Copyright (c) 2024-2026 nnnnnnn0090
 
             Permission is hereby granted, free of charge, to any person obtaining a copy
             of this software and associated documentation files (the "Software"), to deal

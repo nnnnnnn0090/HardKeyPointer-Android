@@ -1,21 +1,38 @@
+/*
+ * HardKeyPointer-Android
+ * Copyright (c) 2024-2026 nnnnnnn0090
+ * 作者: nnnnnnn0090
+ * ライセンス: リポジトリの LICENSE を参照してください。
+ */
 package com.nnnnnnn0090.hardkeypointer
 
-import android.content.Context
+import android.widget.Button
+import android.widget.TextView
 import android.view.KeyEvent
 import androidx.test.core.app.ActivityScenario
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import org.hamcrest.CoreMatchers.allOf
-import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.is
-import org.hamcrest.CoreMatchers.notNullValue
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.google.android.material.slider.Slider
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class MainActivityTest {
 
+    /** 実機テスト間で設定とキー入力待ち状態を初期化します。 */
+    @Before
+    fun resetPreferences() {
+        KeyCaptureState.finish()
+        InstrumentationRegistry.getInstrumentation().targetContext
+            .getSharedPreferences("com.nnnnnnn0090.hardkeypointer.PREFS", 0)
+            .edit()
+            .clear()
+            .commit()
+    }
+
+    /** 設定画面が起動できることを確認します。 */
     @Test
     fun testActivityLaunches() {
         val scenario = ActivityScenario.launch(MainActivity::class.java)
@@ -25,25 +42,41 @@ class MainActivityTest {
         }
     }
 
+    /** 初期スライダー値が既定値で表示されることを確認します。 */
     @Test
     fun testLoadPreferences_setsDefaultValues() {
         val scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario.onActivity { activity ->
-            // Test that default values are loaded
-            val moveSpeedEditText = activity.findViewById<android.widget.EditText>(R.id.moveSpeedEditText)
-            val moveAccelEditText = activity.findViewById<android.widget.EditText>(R.id.moveAccelEditText)
-            val scrollDistanceEditText = activity.findViewById<android.widget.EditText>(R.id.scrollDistanceEditText)
-            
-            assertNotNull(moveSpeedEditText)
-            assertNotNull(moveAccelEditText)
-            assertNotNull(scrollDistanceEditText)
-            
-            assertEquals("30", moveSpeedEditText.text.toString())
-            assertEquals("100", moveAccelEditText.text.toString())
-            assertEquals("200", scrollDistanceEditText.text.toString())
+            val moveSpeedSlider = activity.findViewById<Slider>(R.id.moveSpeedSlider)
+            val moveAccelSlider = activity.findViewById<Slider>(R.id.moveAccelSlider)
+            val scrollDistanceSlider = activity.findViewById<Slider>(R.id.scrollDistanceSlider)
+
+            assertNotNull(moveSpeedSlider)
+            assertNotNull(moveAccelSlider)
+            assertNotNull(scrollDistanceSlider)
+
+            assertEquals(30f, moveSpeedSlider.value)
+            assertEquals(100f, moveAccelSlider.value)
+            assertEquals(200f, scrollDistanceSlider.value)
         }
     }
 
+    /** サービス状態を表示するビューが存在することを確認します。 */
+    @Test
+    fun testServiceStatusViewsExist() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            val chip = activity.findViewById<com.google.android.material.chip.Chip>(R.id.serviceStatusChip)
+            val detail = activity.findViewById<TextView>(R.id.serviceStatusDetail)
+            val button = activity.findViewById<Button>(R.id.openAccessibilitySettingsButton)
+
+            assertNotNull(chip)
+            assertNotNull(detail)
+            assertNotNull(button)
+        }
+    }
+
+    /** 全キー設定ボタンがレイアウトに存在することを確認します。 */
     @Test
     fun testKeyCodeButtonsExist() {
         val scenario = ActivityScenario.launch(MainActivity::class.java)
@@ -60,21 +93,40 @@ class MainActivityTest {
                 R.id.scrollleftKeyCodeButton,
                 R.id.scrollrightKeyCodeButton
             )
-            
+
             buttonIds.forEach { id ->
-                val button = activity.findViewById<android.widget.Button>(id)
+                val button = activity.findViewById<Button>(id)
                 assertNotNull("Button with id $id should exist", button)
             }
         }
     }
 
+    /** ライセンス表示ボタンが存在することを確認します。 */
     @Test
     fun testLicenseButtonExists() {
         val scenario = ActivityScenario.launch(MainActivity::class.java)
         scenario.onActivity { activity ->
-            val licenseButton = activity.findViewById<android.widget.Button>(R.id.license_button)
+            val licenseButton = activity.findViewById<Button>(R.id.license_button)
             assertNotNull(licenseButton)
-            assertEquals("License", licenseButton.text.toString())
+        }
+    }
+
+    /** ボタンクリック後に次の物理キーを直接割り当てられることを確認します。 */
+    @Test
+    fun testDirectButtonClickCapturesNextKey() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            val button = activity.findViewById<Button>(R.id.upKeyCodeButton)
+            button.performClick()
+
+            assertTrue(KeyCaptureState.isActive)
+            assertTrue(activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_F1)))
+            assertEquals(
+                KeyEvent.KEYCODE_F1,
+                SettingsRepository(activity).getKeyCode(PointerAction.UP)
+            )
+            assertTrue(activity.dispatchKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_F1)))
+            assertFalse(KeyCaptureState.isActive)
         }
     }
 }

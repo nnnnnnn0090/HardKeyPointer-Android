@@ -2,6 +2,20 @@
     <string name="app_name">HardKeyPointer</string>
     <string name="accessibility_service_description">HardKeyPointer - © 2025 @nnnnnnn0090</string>
 
+    <string name="app_subtitle">Control the pointer with hardware keys</string>
+
+    <string name="service_status_title">Accessibility Service</string>
+    <string name="service_enabled">Enabled</string>
+    <string name="service_disabled">Disabled</string>
+    <string name="service_status_enabled_detail">HardKeyPointer is ready to use.</string>
+    <string name="service_status_disabled_detail">Enable HardKeyPointer in accessibility settings to use the pointer.</string>
+    <string name="open_accessibility_settings">Open accessibility settings</string>
+
+    <string name="section_pointer">Pointer Movement</string>
+    <string name="section_scroll">Scroll</string>
+    <string name="section_toggle">Pointer Toggle</string>
+    <string name="section_settings">Settings</string>
+
     <string name="key_settings">Key Settings</string>
     <string name="up_move_key_code">Move Up</string>
     <string name="down_move_key_code">Move Down</string>
@@ -16,12 +30,13 @@
     <string name="disable_key_code">Show/Hide Pointer</string>
     <string name="set_button">Set</string>
     <string name="license_button">License</string>
-    <string name="credit">© 2024 @nnnnnnn0090</string>
+    <string name="credit">© 2026 Hizuru Lab / nnnnnnn0090</string>
     <string name="enter_speed_hint">Movement speed</string>
     <string name="move_speed_saved">Speed saved</string>
-    <string name="not_set">Disabled</string>
-    <string name="waiting_for_key_input">Press any key...</string>
+    <string name="not_set">Not set</string>
+    <string name="waiting_for_key_input">Press any key…</string>
     <string name="key_code_set">Key set: %1$d</string>
+    <string name="key_already_assigned">This key is already assigned.</string>
     <string name="pointer_removed">Pointer hidden</string>
     <string name="pointer_shown">Pointer shown</string>
     <string name="move_accel">Acceleration</string>
@@ -30,4 +45,6 @@
     <string name="scroll_distance">Scroll Distance</string>
     <string name="enter_scroll_distance_hint">Scroll distance (pixels)</string>
     <string name="scroll_distance_saved">Scroll distance saved</string>
+    <string name="value_px">%1$d px</string>
+    <string name="value_percent">%1$d%%</string>
 </resources>

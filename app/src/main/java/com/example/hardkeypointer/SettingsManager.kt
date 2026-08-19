@@ -1,49 +1,69 @@
+/*
+ * HardKeyPointer-Android
+ * Copyright (c) 2024-2026 nnnnnnn0090
+ * 作者: nnnnnnn0090
+ * ライセンス: リポジトリの LICENSE を参照してください。
+ */
 package com.nnnnnnn0090.hardkeypointer
 
 import android.content.Context
-import android.content.SharedPreferences
-import android.view.KeyEvent
 
+/**
+ * 旧 API を利用するコードのための互換Facadeです。
+ * 新しいコードでは [SettingsRepository] と [KeyCaptureState] を直接利用してください。
+ */
+@Deprecated("Use SettingsRepository and KeyCaptureState")
 object SettingsManager {
-    private const val PREF_NAME = "com.nnnnnnn0090.hardkeypointer.PREFS"
-    
-    private val defaultKeys = mapOf(
-        "up" to KeyEvent.KEYCODE_DPAD_UP,
-        "down" to KeyEvent.KEYCODE_DPAD_DOWN,
-        "left" to KeyEvent.KEYCODE_DPAD_LEFT,
-        "right" to KeyEvent.KEYCODE_DPAD_RIGHT,
-        "tap" to KeyEvent.KEYCODE_ENTER,
-        "disable" to KeyEvent.KEYCODE_VOLUME_DOWN,
-        "scrollup" to KeyEvent.KEYCODE_2,
-        "scrolldown" to KeyEvent.KEYCODE_5,
-        "scrollleft" to KeyEvent.KEYCODE_4,
-        "scrollright" to KeyEvent.KEYCODE_6
-    )
-    
-    @Volatile
-    private var prefs: SharedPreferences? = null
-    
-    private fun getPrefs(context: Context): SharedPreferences {
-        return prefs ?: synchronized(this) {
-            prefs ?: context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE).also { prefs = it }
+    const val NOT_SET = SettingsRepository.NOT_SET
+    const val DEFAULT_MOVE_SPEED = SettingsRepository.DEFAULT_MOVE_SPEED
+    const val DEFAULT_MOVE_ACCEL = SettingsRepository.DEFAULT_MOVE_ACCELERATION
+    const val DEFAULT_SCROLL_DISTANCE = SettingsRepository.DEFAULT_SCROLL_DISTANCE
+    const val MIN_MOVE_SPEED = SettingsRepository.MIN_MOVE_SPEED
+    const val MAX_MOVE_SPEED = SettingsRepository.MAX_MOVE_SPEED
+    const val MIN_MOVE_ACCEL = SettingsRepository.MIN_MOVE_ACCELERATION
+    const val MAX_MOVE_ACCEL = SettingsRepository.MAX_MOVE_ACCELERATION
+    const val MIN_SCROLL_DISTANCE = SettingsRepository.MIN_SCROLL_DISTANCE
+    const val MAX_SCROLL_DISTANCE = SettingsRepository.MAX_SCROLL_DISTANCE
+
+    /** 旧API向けのキー入力待ち状態を変更します。 */
+    fun setKeyCaptureMode(enabled: Boolean) {
+        if (enabled) KeyCaptureState.begin() else KeyCaptureState.finish()
+    }
+
+    /** 旧API向けにキー入力待ち状態を返します。 */
+    fun isKeyCaptureMode(): Boolean = KeyCaptureState.isActive
+
+    /** 旧形式の保存キー名からキーコードを取得します。 */
+    fun getKeyCode(context: Context, action: String): Int {
+        val binding = PointerAction.fromStorageKey(action) ?: return NOT_SET
+        return SettingsRepository(context).getKeyCode(binding)
+    }
+
+    /** 旧形式の保存キー名へキーコードを保存します。 */
+    fun setKeyCode(context: Context, action: String, keyCode: Int) {
+        PointerAction.fromStorageKey(action)?.let {
+            SettingsRepository(context).setKeyCode(it, keyCode)
         }
     }
-    
-    fun getKeyCode(context: Context, action: String): Int =
-        getPrefs(context).getInt(action, defaultKeys[action] ?: 0)
-    
-    fun setKeyCode(context: Context, action: String, keyCode: Int) =
-        getPrefs(context).edit().putInt(action, keyCode).apply()
-    
-    fun getMoveSpeed(context: Context): Int = getPrefs(context).getInt("moveSpeed", 30)
-    fun setMoveSpeed(context: Context, speed: Int) = getPrefs(context).edit().putInt("moveSpeed", speed).apply()
-    
-    fun getMoveAccel(context: Context): Int = getPrefs(context).getInt("moveAccel", 100)
-    fun setMoveAccel(context: Context, accel: Int) = getPrefs(context).edit().putInt("moveAccel", accel).apply()
-    
-    fun getScrollDistance(context: Context): Int = getPrefs(context).getInt("scrollDistance", 200)
-    fun setScrollDistance(context: Context, distance: Int) = getPrefs(context).edit().putInt("scrollDistance", distance).apply()
-    
+
+    /** 旧API向けに移動速度を取得します。 */
+    fun getMoveSpeed(context: Context): Int = SettingsRepository(context).getMoveSpeed()
+    /** 旧API向けに移動速度を保存します。 */
+    fun setMoveSpeed(context: Context, speed: Int) = SettingsRepository(context).setMoveSpeed(speed)
+
+    /** 旧API向けに加速度を取得します。 */
+    fun getMoveAccel(context: Context): Int = SettingsRepository(context).getMoveAcceleration()
+    /** 旧API向けに加速度を保存します。 */
+    fun setMoveAccel(context: Context, accel: Int) =
+        SettingsRepository(context).setMoveAcceleration(accel)
+
+    /** 旧API向けにスクロール距離を取得します。 */
+    fun getScrollDistance(context: Context): Int = SettingsRepository(context).getScrollDistance()
+    /** 旧API向けにスクロール距離を保存します。 */
+    fun setScrollDistance(context: Context, distance: Int) =
+        SettingsRepository(context).setScrollDistance(distance)
+
+    /** 旧形式のキー名を使った全割り当てを返します。 */
     fun getAllKeyCodes(context: Context): Map<String, Int> =
-        defaultKeys.mapValues { (action, default) -> getKeyCode(context, action) }
+        SettingsRepository(context).getKeyCodes().mapKeys { it.key.storageKey }
 }
