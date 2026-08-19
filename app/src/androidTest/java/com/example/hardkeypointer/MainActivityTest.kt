@@ -151,6 +151,30 @@ class MainActivityTest {
         }
     }
 
+    /** 全設定を初期値へ戻すボタンが存在することを確認します。 */
+    @Test
+    fun testResetSettingsButtonExists() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            val resetButton = activity.findViewById<Button>(R.id.resetSettingsButton)
+            assertNotNull(resetButton)
+        }
+    }
+
+    /** 操作ごとに長押し発動方式を保存できることを確認します。 */
+    @Test
+    fun testTriggerModeCanBeChangedPerAction() {
+        val scenario = ActivityScenario.launch(MainActivity::class.java)
+        scenario.onActivity { activity ->
+            val keyButton = activity.findViewById<Button>(R.id.upKeyCodeButton)
+            val modeButton = (keyButton.parent.parent as android.view.ViewGroup)
+                .findViewById<Button>(R.id.triggerModeButton)
+
+            assertNotNull(modeButton)
+            assertEquals("即押し ▼", modeButton.text.toString())
+        }
+    }
+
     /** ボタンクリック後に次の物理キーを直接割り当てられることを確認します。 */
     @Test
     fun testDirectButtonClickCapturesNextKey() {

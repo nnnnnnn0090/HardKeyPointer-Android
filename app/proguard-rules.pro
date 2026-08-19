@@ -8,9 +8,6 @@
 # Keep accessibility service
 -keep class com.nnnnnnn0090.hardkeypointer.TapService { *; }
 
-# Keep settings manager
--keep class com.nnnnnnn0090.hardkeypointer.SettingsManager { *; }
-
 # Keep main activity
 -keep class com.nnnnnnn0090.hardkeypointer.MainActivity { *; }
 

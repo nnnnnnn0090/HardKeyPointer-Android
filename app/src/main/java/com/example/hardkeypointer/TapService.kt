@@ -14,6 +14,7 @@ import android.util.Log
 import android.view.Display
 import android.view.KeyEvent
 import android.view.Surface
+import android.view.ViewConfiguration
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
@@ -25,13 +26,16 @@ class TapService : AccessibilityService() {
     private lateinit var gestures: GestureController
     private lateinit var movement: PointerMovementController
     private lateinit var scrollRepeater: ScrollRepeater
+    private lateinit var zoomRepeater: ZoomRepeater
 
     private val handler = Handler(Looper.getMainLooper())
     private val movementHandler = Handler(Looper.getMainLooper())
     private val capturedKeys = mutableSetOf<Int>()
+    private val pressedActions = mutableSetOf<PointerAction>()
+    private val activatedActions = mutableSetOf<PointerAction>()
+    private val longPressTasks = mutableMapOf<PointerAction, Runnable>()
     private var tapStartedAt = 0L
     private var backActionInProgress = false
-    private var zoomKeyDownCode: Int? = null
 
     /** サービス接続時に設定、オーバーレイ、入力制御を初期化します。 */
     override fun onServiceConnected() {
@@ -58,6 +62,13 @@ class TapService : AccessibilityService() {
                 onScroll = gestures::scroll,
                 intervalProvider = { scrollIntervalMillis(settings.getScrollSpeed()).toInt() }
             )
+            zoomRepeater = ZoomRepeater(
+                handler = handler,
+                onZoom = { expand ->
+                    if (expand) gestures.zoomIn() else gestures.zoomOut()
+                },
+                intervalProvider = { settings.getZoomDuration() }
+            )
             showPointer()
         } catch (error: Exception) {
             Log.e(TAG, "Failed to initialize service", error)
@@ -69,33 +80,19 @@ class TapService : AccessibilityService() {
         val keyEvent = event ?: return false
         return try {
             if (handleKeyCaptureEvent(keyEvent)) return true
-            if (!::settings.isInitialized) return false
+            if (!::settings.isInitialized || !::pointer.isInitialized) return false
 
             val keyCodes = settings.getKeyCodes()
-            if (!pointer.isVisible) return handleHiddenPointerKey(keyEvent, keyCodes)
-
-            pointer.refreshBounds()
-            if (isToggleKey(keyEvent, keyCodes)) {
-                removePointer()
-                return true
+            val action = configuredAction(keyEvent.keyCode, keyCodes)
+            if (!pointer.isVisible && action != PointerAction.TOGGLE) {
+                if (keyEvent.action == KeyEvent.ACTION_UP && action != null) {
+                    cancelActionState(action)
+                }
+                return false
             }
-
-            when {
-                isMovementOrTapKey(keyEvent, keyCodes) -> {
-                    handleMovementOrTap(keyEvent, keyCodes)
-                    true
-                }
-                isScrollKey(keyEvent, keyCodes) -> {
-                    handleScroll(keyEvent, keyCodes)
-                    true
-                }
-                isZoomKey(keyEvent, keyCodes) -> {
-                    handleZoom(keyEvent, keyCodes)
-                    true
-                }
-                keyEvent.keyCode == KeyEvent.KEYCODE_BACK -> handleBack(keyEvent)
-                else -> false
-            }
+            if (action != null) return handleConfiguredAction(action, keyEvent)
+            if (keyEvent.keyCode == KeyEvent.KEYCODE_BACK) return handleBack(keyEvent)
+            false
         } catch (error: Exception) {
             Log.e(TAG, "Error handling key event", error)
             false
@@ -118,116 +115,128 @@ class TapService : AccessibilityService() {
         return true
     }
 
-    /** ポインタ非表示中は表示切替キーだけを処理します。 */
-    private fun handleHiddenPointerKey(
-        event: KeyEvent,
+    /** キーコードに対応する操作を検索します。 */
+    private fun configuredAction(
+        keyCode: Int,
         keyCodes: Map<PointerAction, Int>
-    ): Boolean {
-        if (event.keyCode == keyCodes.getValue(PointerAction.TOGGLE) &&
-            event.action == KeyEvent.ACTION_DOWN
-        ) {
-            showPointer()
-            return true
-        }
-        return false
+    ): PointerAction? = PointerAction.entries.firstOrNull { action ->
+        keyCodes[action] == keyCode && keyCode != SettingsRepository.NOT_SET
     }
 
-    /** イベントがポインタ表示切替キーの押下か判定します。 */
-    private fun isToggleKey(event: KeyEvent, keyCodes: Map<PointerAction, Int>): Boolean =
-        event.keyCode == keyCodes.getValue(PointerAction.TOGGLE) &&
-            event.action == KeyEvent.ACTION_DOWN
-
-    /** イベントが移動またはタップ操作のキーか判定します。 */
-    private fun isMovementOrTapKey(
-        event: KeyEvent,
-        keyCodes: Map<PointerAction, Int>
-    ): Boolean =
-        event.keyCode == keyCodes.getValue(PointerAction.UP) ||
-            event.keyCode == keyCodes.getValue(PointerAction.DOWN) ||
-            event.keyCode == keyCodes.getValue(PointerAction.LEFT) ||
-            event.keyCode == keyCodes.getValue(PointerAction.RIGHT) ||
-            event.keyCode == keyCodes.getValue(PointerAction.TAP)
-
-    /** イベントがいずれかのスクロール操作キーか判定します。 */
-    private fun isScrollKey(
-        event: KeyEvent,
-        keyCodes: Map<PointerAction, Int>
-    ): Boolean =
-        event.keyCode == keyCodes.getValue(PointerAction.SCROLL_UP) ||
-            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_DOWN) ||
-            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_LEFT) ||
-            event.keyCode == keyCodes.getValue(PointerAction.SCROLL_RIGHT)
-
-    /** イベントがいずれかのズーム操作キーか判定します。 */
-    private fun isZoomKey(
-        event: KeyEvent,
-        keyCodes: Map<PointerAction, Int>
-    ): Boolean =
-        event.keyCode == keyCodes.getValue(PointerAction.ZOOM_IN) ||
-            event.keyCode == keyCodes.getValue(PointerAction.ZOOM_OUT)
-
-    /** 移動キーの押下・解放とタップの押下時間を処理します。 */
-    private fun handleMovementOrTap(
-        event: KeyEvent,
-        keyCodes: Map<PointerAction, Int>
-    ) {
-        val direction = movementDirection(event.keyCode, keyCodes)
-        if (direction != null) {
-            when (event.action) {
-                KeyEvent.ACTION_DOWN -> {
-                    val rotated = direction.rotated(currentRotation())
-                    movement.start(rotated.dx, rotated.dy)
-                }
-                KeyEvent.ACTION_UP -> movement.stop()
-            }
-            return
-        }
-
-        if (event.keyCode == keyCodes.getValue(PointerAction.TAP)) {
-            when (event.action) {
-                KeyEvent.ACTION_DOWN -> if (tapStartedAt == 0L) {
-                    tapStartedAt = System.currentTimeMillis()
-                }
-                KeyEvent.ACTION_UP -> {
-                    if (tapStartedAt != 0L) {
-                        gestures.tap(System.currentTimeMillis() - tapStartedAt)
-                    }
-                    tapStartedAt = 0L
-                }
-            }
-        }
-    }
-
-    /** スクロール方向の繰り返し開始・停止を処理します。 */
-    private fun handleScroll(event: KeyEvent, keyCodes: Map<PointerAction, Int>) {
-        val direction = when (event.keyCode) {
-            keyCodes.getValue(PointerAction.SCROLL_UP) -> PointerDirection.UP
-            keyCodes.getValue(PointerAction.SCROLL_DOWN) -> PointerDirection.DOWN
-            keyCodes.getValue(PointerAction.SCROLL_LEFT) -> PointerDirection.LEFT
-            keyCodes.getValue(PointerAction.SCROLL_RIGHT) -> PointerDirection.RIGHT
-            else -> return
-        }
-        when (event.action) {
-            KeyEvent.ACTION_DOWN -> scrollRepeater.start(direction)
-            KeyEvent.ACTION_UP -> scrollRepeater.stop(direction)
-        }
-    }
-
-    /** ズームキーの長押しリピートを抑制し、押下ごとに1回だけ実行します。 */
-    private fun handleZoom(event: KeyEvent, keyCodes: Map<PointerAction, Int>) {
+    /** 設定された発動方式に従ってキーイベントを処理します。 */
+    private fun handleConfiguredAction(action: PointerAction, event: KeyEvent): Boolean {
         when (event.action) {
             KeyEvent.ACTION_DOWN -> {
-                if (zoomKeyDownCode != null) return
-                zoomKeyDownCode = event.keyCode
-                when (event.keyCode) {
-                    keyCodes.getValue(PointerAction.ZOOM_IN) -> gestures.zoomIn()
-                    keyCodes.getValue(PointerAction.ZOOM_OUT) -> gestures.zoomOut()
+                if (!pressedActions.add(action)) return true
+                if (settings.getTriggerMode(action) == TriggerMode.IMMEDIATE) {
+                    activateAction(action)
+                } else {
+                    scheduleLongPress(action)
                 }
             }
             KeyEvent.ACTION_UP -> {
-                if (zoomKeyDownCode == event.keyCode) zoomKeyDownCode = null
+                if (!pressedActions.remove(action)) return true
+                cancelLongPress(action)
+                if (activatedActions.remove(action)) deactivateAction(action)
             }
         }
+        return true
+    }
+
+    /** 長押し時間を経過した操作を発動するタスクを登録します。 */
+    private fun scheduleLongPress(action: PointerAction) {
+        val task = Runnable {
+            longPressTasks.remove(action)
+            if (pressedActions.contains(action)) activateAction(action)
+        }
+        longPressTasks[action] = task
+        handler.postDelayed(task, ViewConfiguration.getLongPressTimeout().toLong())
+    }
+
+    /** 長押し待ちタスクを解除します。 */
+    private fun cancelLongPress(action: PointerAction) {
+        longPressTasks.remove(action)?.let(handler::removeCallbacks)
+    }
+
+    /** 操作を発動し、キーを押している間の処理を開始します。 */
+    private fun activateAction(action: PointerAction) {
+        if (!activatedActions.add(action)) return
+        when (action) {
+            PointerAction.UP,
+            PointerAction.DOWN,
+            PointerAction.LEFT,
+            PointerAction.RIGHT -> {
+                val direction = movementDirection(action).rotated(currentRotation())
+                movement.start(direction.dx, direction.dy)
+            }
+            PointerAction.TAP -> tapStartedAt = System.currentTimeMillis()
+            PointerAction.TOGGLE -> if (pointer.isVisible) removePointer() else showPointer()
+            PointerAction.SCROLL_UP,
+            PointerAction.SCROLL_DOWN,
+            PointerAction.SCROLL_LEFT,
+            PointerAction.SCROLL_RIGHT -> scrollRepeater.start(scrollDirection(action))
+            PointerAction.ZOOM_IN -> zoomRepeater.start(expand = true)
+            PointerAction.ZOOM_OUT -> zoomRepeater.start(expand = false)
+        }
+    }
+
+    /** 操作キーの解放時に継続処理を停止し、タップを確定します。 */
+    private fun deactivateAction(action: PointerAction) {
+        when (action) {
+            PointerAction.UP,
+            PointerAction.DOWN,
+            PointerAction.LEFT,
+            PointerAction.RIGHT -> movement.stop()
+            PointerAction.TAP -> {
+                if (tapStartedAt != 0L) {
+                    gestures.tap(System.currentTimeMillis() - tapStartedAt)
+                }
+                tapStartedAt = 0L
+            }
+            PointerAction.SCROLL_UP,
+            PointerAction.SCROLL_DOWN,
+            PointerAction.SCROLL_LEFT,
+            PointerAction.SCROLL_RIGHT -> scrollRepeater.stop(scrollDirection(action))
+            PointerAction.TOGGLE -> Unit
+            PointerAction.ZOOM_IN -> zoomRepeater.stop(expand = true)
+            PointerAction.ZOOM_OUT -> zoomRepeater.stop(expand = false)
+        }
+    }
+
+    /** 操作の保留状態を解除し、発動前の長押しも取り消します。 */
+    private fun cancelActionState(action: PointerAction) {
+        pressedActions.remove(action)
+        cancelLongPress(action)
+        if (activatedActions.remove(action)) deactivateAction(action)
+    }
+
+    /** すべての操作キー状態と長押し待ちタスクを解除します。 */
+    private fun clearActionStates() {
+        longPressTasks.values.toList().forEach(handler::removeCallbacks)
+        longPressTasks.clear()
+        pressedActions.clear()
+        activatedActions.clear()
+        tapStartedAt = 0L
+        if (::scrollRepeater.isInitialized) scrollRepeater.stopAll()
+        if (::zoomRepeater.isInitialized) zoomRepeater.stopAll()
+    }
+
+    /** 移動操作を論理方向へ変換します。 */
+    private fun movementDirection(action: PointerAction): PointerDirection = when (action) {
+        PointerAction.UP -> PointerDirection.UP
+        PointerAction.DOWN -> PointerDirection.DOWN
+        PointerAction.LEFT -> PointerDirection.LEFT
+        PointerAction.RIGHT -> PointerDirection.RIGHT
+        else -> error("Not a movement action: $action")
+    }
+
+    /** スクロール操作を方向へ変換します。 */
+    private fun scrollDirection(action: PointerAction): PointerDirection = when (action) {
+        PointerAction.SCROLL_UP -> PointerDirection.UP
+        PointerAction.SCROLL_DOWN -> PointerDirection.DOWN
+        PointerAction.SCROLL_LEFT -> PointerDirection.LEFT
+        PointerAction.SCROLL_RIGHT -> PointerDirection.RIGHT
+        else -> error("Not a scroll action: $action")
     }
 
     /** スクロール速度レベルをジェスチャー間隔へ変換します。 */
@@ -236,18 +245,6 @@ class TapService : AccessibilityService() {
             (speed.coerceIn(MIN_SCROLL_SPEED, MAX_SCROLL_SPEED) - MIN_SCROLL_SPEED) *
             (MAX_SCROLL_INTERVAL_MS - MIN_SCROLL_INTERVAL_MS).toLong() /
             (MAX_SCROLL_SPEED - MIN_SCROLL_SPEED)
-
-    /** キーコードを画面回転前の論理移動方向へ変換します。 */
-    private fun movementDirection(
-        keyCode: Int,
-        keyCodes: Map<PointerAction, Int>
-    ): PointerDirection? = when (keyCode) {
-        keyCodes.getValue(PointerAction.UP) -> PointerDirection.UP
-        keyCodes.getValue(PointerAction.DOWN) -> PointerDirection.DOWN
-        keyCodes.getValue(PointerAction.LEFT) -> PointerDirection.LEFT
-        keyCodes.getValue(PointerAction.RIGHT) -> PointerDirection.RIGHT
-        else -> null
-    }
 
     /** 戻るキーをデバウンスし、システムの戻る操作を実行します。 */
     private fun handleBack(event: KeyEvent): Boolean {
@@ -272,8 +269,7 @@ class TapService : AccessibilityService() {
     private fun removePointer() {
         if (::scrollRepeater.isInitialized) scrollRepeater.stopAll()
         if (::movement.isInitialized) movement.stop()
-        tapStartedAt = 0L
-        zoomKeyDownCode = null
+        clearActionStates()
         if (::pointer.isInitialized && pointer.hide()) {
             Toast.makeText(this, R.string.pointer_removed, Toast.LENGTH_SHORT).show()
         }
@@ -316,6 +312,6 @@ class TapService : AccessibilityService() {
         private const val MIN_SCROLL_INTERVAL_MS = 50L
         private const val MAX_SCROLL_INTERVAL_MS = 500L
         private const val MIN_SCROLL_SPEED = 1
-        private const val MAX_SCROLL_SPEED = 10
+    private const val MAX_SCROLL_SPEED = 10
     }
 }

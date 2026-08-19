@@ -8,11 +8,16 @@ package com.nnnnnnn0090.hardkeypointer
 
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.View
+import android.view.ViewGroup
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.appcompat.widget.PopupMenu
 import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.android.material.slider.Slider
 import kotlin.math.roundToInt
@@ -23,6 +28,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var serviceStatusLabel: TextView
     private lateinit var serviceStatusDetail: TextView
     private val bindingButtons = mutableMapOf<PointerAction, Button>()
+    private val triggerModeButtons = mutableMapOf<PointerAction, Button>()
     private var captureButton: Button? = null
     private var captureAction: PointerAction? = null
     private var pendingCapturedKeyCode: Int? = null
@@ -40,10 +46,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         initializeBindingButtons()
+        initializeTriggerModeControls()
         initializeCoordinateMode()
         initializeSliders()
         findViewById<Button>(R.id.license_button).setOnClickListener {
             LicenseUtils.showLicenseDialog(this)
+        }
+        findViewById<Button>(R.id.resetSettingsButton).setOnClickListener {
+            showResetSettingsConfirmation()
         }
     }
 
@@ -105,6 +115,108 @@ class MainActivity : AppCompatActivity() {
                 true
             }
         }
+    }
+
+    /** 各キー設定へ即押し・長押しの発動方式セレクターを追加します。 */
+    private fun initializeTriggerModeControls() {
+        bindingButtons.forEach { (action, button) ->
+            val row = button.parent as? ViewGroup ?: return@forEach
+            val rowParent = row.parent as? ViewGroup ?: return@forEach
+            val rowIndex = rowParent.indexOfChild(row)
+            if (rowIndex < 0) return@forEach
+
+            val originalParams = row.layoutParams as? LinearLayout.LayoutParams
+            val containerParams = originalParams?.let { LinearLayout.LayoutParams(it) }
+                ?: LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+                )
+            containerParams.topMargin = 0
+            val container = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = containerParams
+                val verticalPadding = resources.getDimensionPixelSize(
+                    R.dimen.action_setting_vertical_padding
+                )
+                setPadding(0, verticalPadding, 0, verticalPadding)
+            }
+            rowParent.removeViewAt(rowIndex)
+            row.layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+            container.addView(row)
+
+            val control = layoutInflater.inflate(
+                R.layout.trigger_mode_button,
+                container,
+                false
+            )
+            container.addView(control)
+
+            val modeButton = control.findViewById<Button>(R.id.triggerModeButton)
+            triggerModeButtons[action] = modeButton
+            updateTriggerModeButton(action)
+            modeButton.setOnClickListener {
+                showTriggerModeMenu(action, modeButton)
+            }
+
+            if (rowIndex > 1) {
+                rowParent.addView(createActionDivider(), rowIndex)
+                rowParent.addView(container, rowIndex + 1)
+            } else {
+                rowParent.addView(container, rowIndex)
+            }
+        }
+    }
+
+    /** 操作設定の境界を示す、控えめな区切り線を生成します。 */
+    private fun createActionDivider(): View {
+        val height = resources.getDimensionPixelSize(R.dimen.action_setting_divider_height)
+        return View(this).apply {
+            setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.outline_variant))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                height
+            )
+        }
+    }
+
+    /** 現在の発動方式をボタンの表示とアクセシビリティ説明へ反映します。 */
+    private fun updateTriggerModeButton(action: PointerAction) {
+        val modeButton = triggerModeButtons[action] ?: return
+        val mode = settings.getTriggerMode(action)
+        val label = getString(
+            if (mode == TriggerMode.IMMEDIATE) {
+                R.string.trigger_mode_immediate
+            } else {
+                R.string.trigger_mode_long_press
+            }
+        )
+        modeButton.text = getString(R.string.trigger_mode_button_text, label)
+        modeButton.contentDescription = getString(
+            R.string.trigger_mode_content_description,
+            getString(R.string.trigger_mode_label),
+            label
+        )
+    }
+
+    /** 操作ごとの発動方式をポップアップメニューから変更します。 */
+    private fun showTriggerModeMenu(action: PointerAction, anchor: Button) {
+        PopupMenu(this, anchor).apply {
+            menu.add(0, TRIGGER_MENU_IMMEDIATE, 0, R.string.trigger_mode_immediate)
+            menu.add(0, TRIGGER_MENU_LONG_PRESS, 1, R.string.trigger_mode_long_press)
+            setOnMenuItemClickListener { item ->
+                val mode = when (item.itemId) {
+                    TRIGGER_MENU_IMMEDIATE -> TriggerMode.IMMEDIATE
+                    TRIGGER_MENU_LONG_PRESS -> TriggerMode.LONG_PRESS
+                    else -> return@setOnMenuItemClickListener false
+                }
+                settings.setTriggerMode(action, mode)
+                updateTriggerModeButton(action)
+                true
+            }
+        }.show()
     }
 
     /** 移動、加速度、スクロール、ズームの各スライダーを初期化します。 */
@@ -226,6 +338,26 @@ class MainActivity : AppCompatActivity() {
             if (enabled) Button.GONE else Button.VISIBLE
     }
 
+    /** 全設定を初期値へ戻す確認ダイアログを表示します。 */
+    private fun showResetSettingsConfirmation() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.reset_settings_title)
+            .setMessage(R.string.reset_settings_message)
+            .setNegativeButton(R.string.cancel_button, null)
+            .setPositiveButton(R.string.reset_settings_confirm) { _, _ ->
+                resetSettings()
+            }
+            .show()
+    }
+
+    /** 全設定を消去して、初期状態を画面へ再描画します。 */
+    private fun resetSettings() {
+        cancelKeyCapture()
+        settings.resetAll()
+        renderSettings()
+        Toast.makeText(this, R.string.reset_settings_completed, Toast.LENGTH_SHORT).show()
+    }
+
     /** 保存済みのキー名と数値設定を画面へ描画します。 */
     private fun renderSettings() {
         bindingButtons.forEach { (action, button) ->
@@ -279,6 +411,7 @@ class MainActivity : AppCompatActivity() {
             )
         findViewById<TextView>(R.id.zoomDurationValue).text =
             getString(R.string.value_ms, settings.getZoomDuration(mode))
+        triggerModeButtons.keys.forEach(::updateTriggerModeButton)
     }
 
     /** 指定IDのスライダーへ範囲内の値を設定します。 */
@@ -364,5 +497,10 @@ class MainActivity : AppCompatActivity() {
             if (action != null) button.text = KeyNameFormatter.format(this, settings.getKeyCode(action))
         }
         finishKeyCapture()
+    }
+
+    private companion object {
+        const val TRIGGER_MENU_IMMEDIATE = 1
+        const val TRIGGER_MENU_LONG_PRESS = 2
     }
 }

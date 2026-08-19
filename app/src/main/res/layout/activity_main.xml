@@ -478,6 +478,14 @@
                         android:valueTo="1000"
                         android:stepSize="50"
                         android:value="300" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/resetSettingsButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:text="@string/reset_settings" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

@@ -17,10 +17,12 @@ HardKeyPointer displays a pointer overlay on Android and lets you move, click, s
 - Two-finger pinch-in and pinch-out zoom gestures
 - Direction correction after screen rotation
 - Assign every operation to keys available on your device
+- Choose immediate or long-press activation independently for each operation
 - Switch between pixel and screen-ratio coordinate modes
 - Store every numeric setting independently for each mode
 - Show or hide the pointer with a dedicated key
 - Automatic settings persistence and background operation
+- Reset all settings to their defaults with one button and a confirmation dialog
 
 ## Default key bindings
 
@@ -58,6 +60,7 @@ When the service is disabled, the app's status card includes a shortcut to the a
 - Press the toggle key to show or hide the pointer.
 - Hold a movement key to move the pointer continuously. Acceleration increases the movement amount over time when enabled.
 - A short press of the tap key performs a click. The configured press duration is preserved for longer presses.
+- Use the “Trigger mode” control below each key binding to choose whether that operation starts immediately or after Android's standard long-press timeout.
 
 ### Scrolling
 
@@ -65,7 +68,7 @@ Hold a scroll key to repeatedly send short swipes in that direction. Scroll dist
 
 ### Zooming
 
-Press a zoom-in or zoom-out key once to send one two-finger pinch centered on the pointer. Zoom amount and gesture duration are configurable. Key-repeat events are suppressed, so holding the key does not unintentionally trigger repeated zooms. Apps that do not support pinch zoom will not respond.
+Press a zoom-in or zoom-out key to send a two-finger pinch centered on the pointer. While the key is held, the pinch repeats continuously using the configured gesture duration and stops when the key is released. Zoom amount and gesture duration are configurable. Apps that do not support pinch zoom will not respond.
 
 ## Coordinate modes
 
@@ -84,6 +87,8 @@ The other numeric settings are also independent between modes:
 - Zoom speed: gesture duration from 100 to 1000 ms
 
 Use screen-ratio mode for a similar feel across devices with different resolutions or screen sizes. Use pixel mode when you need fixed, pixel-level control.
+
+Use the “Reset all settings” button in the settings section to restore every setting, including key bindings, to its initial state. A confirmation dialog is shown before anything is changed.
 
 ## Building
 

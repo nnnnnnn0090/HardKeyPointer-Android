@@ -47,6 +47,22 @@ class SettingsRepository(context: Context) {
     fun getKeyCodes(): Map<PointerAction, Int> =
         PointerAction.entries.associateWith(::getKeyCode)
 
+    /** 操作の発動方式を取得します。 */
+    fun getTriggerMode(action: PointerAction): TriggerMode =
+        preferences.getString(triggerModeKey(action), TriggerMode.IMMEDIATE.name)
+            ?.let { value -> TriggerMode.entries.firstOrNull { it.name == value } }
+            ?: TriggerMode.IMMEDIATE
+
+    /** 操作の発動方式を保存します。 */
+    fun setTriggerMode(action: PointerAction, mode: TriggerMode) {
+        preferences.edit().putString(triggerModeKey(action), mode.name).apply()
+    }
+
+    /** キー割り当てと全設定値を保存領域から削除し、初期値へ戻します。 */
+    fun resetAll() {
+        preferences.edit().clear().apply()
+    }
+
     /** 現在の距離解釈モードを取得します。 */
     fun getCoordinateMode(): CoordinateMode =
         preferences.getString(KEY_COORDINATE_MODE, CoordinateMode.PIXELS.name)
@@ -205,6 +221,10 @@ class SettingsRepository(context: Context) {
     private fun setBoundedInt(key: String, value: Int, min: Int, max: Int) {
         preferences.edit().putInt(key, value.coerceIn(min, max)).apply()
     }
+
+    /** 操作ごとの発動方式保存キーを返します。 */
+    private fun triggerModeKey(action: PointerAction): String =
+        "triggerMode_${action.storageKey}"
 
     /** モード別の移動速度保存キーを返します。 */
     private fun moveSpeedKey(mode: CoordinateMode): String =

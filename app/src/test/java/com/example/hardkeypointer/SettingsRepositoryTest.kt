@@ -36,6 +36,8 @@ class SettingsRepositoryTest {
         `when`(mockContext.getSharedPreferences(anyString(), anyInt())).thenReturn(mockPrefs)
         `when`(mockPrefs.edit()).thenReturn(mockEditor)
         `when`(mockEditor.putInt(anyString(), anyInt())).thenReturn(mockEditor)
+        `when`(mockEditor.putString(anyString(), anyString())).thenReturn(mockEditor)
+        `when`(mockEditor.clear()).thenReturn(mockEditor)
         repository = SettingsRepository(mockContext)
     }
 
@@ -134,6 +136,38 @@ class SettingsRepositoryTest {
         repository.setKeyCode(PointerAction.UP, KeyEvent.KEYCODE_UNKNOWN)
 
         verify(mockPrefs.edit()).putInt(PointerAction.UP.storageKey, SettingsRepository.NOT_SET)
+        verify(mockEditor).apply()
+    }
+
+    /** 全設定を削除して初期値へ戻せることを確認します。 */
+    @Test
+    fun resetAll_clearsPreferences() {
+        repository.resetAll()
+
+        verify(mockPrefs.edit()).clear()
+        verify(mockEditor).apply()
+    }
+
+    /** 発動方式が未保存時に即押しとなることを確認します。 */
+    @Test
+    fun getTriggerMode_defaultsToImmediate() {
+        assertEquals(TriggerMode.IMMEDIATE, repository.getTriggerMode(PointerAction.UP))
+    }
+
+    /** 長押しの発動方式を保存・取得できることを確認します。 */
+    @Test
+    fun triggerMode_savesAndLoadsLongPress() {
+        `when`(
+            mockPrefs.getString(
+                "triggerMode_up",
+                TriggerMode.IMMEDIATE.name
+            )
+        ).thenReturn(TriggerMode.LONG_PRESS.name)
+
+        assertEquals(TriggerMode.LONG_PRESS, repository.getTriggerMode(PointerAction.UP))
+
+        repository.setTriggerMode(PointerAction.UP, TriggerMode.LONG_PRESS)
+        verify(mockPrefs.edit()).putString("triggerMode_up", TriggerMode.LONG_PRESS.name)
         verify(mockEditor).apply()
     }
 }

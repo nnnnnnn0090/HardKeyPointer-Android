@@ -91,6 +91,16 @@
         <item name="android:textAllCaps">false</item>
     </style>
 
+    <!-- Compact activation-mode menu button shown beside each key binding. -->
+    <style name="TriggerModeButton" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:minWidth">0dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
     <!-- Slider value text -->
     <style name="SettingValue">
         <item name="android:layout_width">wrap_content</item>
